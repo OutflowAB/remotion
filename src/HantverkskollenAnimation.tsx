@@ -3,6 +3,7 @@ import {
   Easing,
   Img,
   interpolate,
+  Sequence,
   spring,
   staticFile,
   useCurrentFrame,
@@ -19,8 +20,8 @@ import {
   MapPin,
   Phone,
   Search,
-  Trash2,
 } from "lucide-react";
+import { HanellGoogleVideo } from "./HanellGoogleVideo";
 
 type CardProps = {
   x: number;
@@ -358,22 +359,349 @@ const COMPANIES: { title: string; subtitle: string; price: string }[] = [
   { title: "Maria Park Hantverk", subtitle: "Mariatorget 4, 118 48 Stockholm", price: "610" },
 ];
 
-const StaticScene: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { width, height, durationInFrames, fps } = useVideoConfig();
+const IntroCompanyJoinScene: React.FC<{
+  layoutWidth?: number;
+  layoutHeight?: number;
+  /** In split view: show filled form + clicked button without replaying typing. */
+  freezeComplete?: boolean;
+}> = ({ layoutWidth, layoutHeight, freezeComplete }) => {
+  const timelineFrame = useCurrentFrame();
+  const frame = freezeComplete ? 10_000 : timelineFrame;
+  const { width: cw, height: ch, fps } = useVideoConfig();
+  const width = layoutWidth ?? cw;
+  const height = layoutHeight ?? ch;
   const k = width / 1280;
-  const cardScale = k;
-  const filterX = 96 * k;
-  const filterY = 290 * k;
-  const filterW = 320 * k;
-  const resultsX = 470 * k;
+  /** Tall canvas (t.ex. 2520×2831): smalare kort centrerat; bred 16∶9: som tidigare. */
+  const tallAspect = height / width >= 1.02;
+  const formWidth = tallAspect ? Math.min(width * 0.92, 640 * k) : width * 0.78;
+  const formPaddingX = tallAspect ? 20 * k : 22 * k;
+  const formPaddingY = tallAspect ? 16 * k : 18 * k;
+  /** Innehållshöjd (ungefär) för vertikal centrering — utan enorm tom yta. */
+  const contentStackH =
+    26 * k +
+    14 * k +
+    25 * k +
+    6 * k +
+    13 * k +
+    18 * k +
+    1 * k +
+    16 * k +
+    8 * k +
+    18 * k +
+    (17 + 6 + 48) * k +
+    14 * k +
+    (17 + 6 + 48) * k +
+    14 * k +
+    (17 + 6 + 48) * k +
+    20 * k +
+    44 * k;
+  const formOuterH = contentStackH + formPaddingY * 2;
+  const formLeft = (width - formWidth) / 2;
+  const formTop = (height - formOuterH) / 2;
+  const buttonWidth = tallAspect ? 160 * k : 144 * k;
+  const buttonHeight = tallAspect ? 46 * k : 44 * k;
+  const nextButtonLeft = formLeft + formWidth - formPaddingX - buttonWidth;
+  const nextButtonTop = formTop + formOuterH - formPaddingY - buttonHeight;
+  const nextButtonCenterX = nextButtonLeft + buttonWidth * 0.5;
+  const nextButtonCenterY = nextButtonTop + buttonHeight * 0.5;
+  /** Till mitten av första fältet (Företagsnamn) för pekare under maskinskrivning. */
+  const nameFieldLeft = formLeft + formPaddingX + 16 * k;
+  const nameFieldMidY =
+    formTop +
+    formPaddingY +
+    26 * k +
+    14 * k +
+    25 * k +
+    6 * k +
+    13 * k +
+    18 * k +
+    1 * k +
+    16 * k +
+    8 * k +
+    18 * k +
+    17 * k +
+    6 * k +
+    24 * k * 0.5;
+  const fullQuery = "Anderssons Måleri AB";
+  const startTypingFrame = 10;
+  const charsPerFrame = 0.45;
+  const typedChars = Math.max(0, Math.floor((frame - startTypingFrame) * charsPerFrame));
+  const typedQuery = fullQuery.slice(0, Math.min(fullQuery.length, typedChars));
+  const typingDoneFrame = startTypingFrame + Math.ceil(fullQuery.length / charsPerFrame);
+  const clickFrame = typingDoneFrame + Math.round(fps * 0.45);
+  const clickPressProgress = interpolate(frame, [clickFrame, clickFrame + 4, clickFrame + 8], [0, 1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const cursorX = interpolate(
+    frame,
+    [0, typingDoneFrame, clickFrame],
+    [nameFieldLeft + 6 * k, nameFieldLeft + 268 * k, nextButtonCenterX - 12 * k],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.bezier(0.22, 1, 0.36, 1) },
+  );
+  const cursorY = interpolate(
+    frame,
+    [0, typingDoneFrame, clickFrame],
+    [nameFieldMidY - 6 * k, nameFieldMidY - 6 * k, nextButtonCenterY - 10 * k],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.bezier(0.22, 1, 0.36, 1) },
+  );
+  const clickRippleProgress = interpolate(frame, [clickFrame + 1, clickFrame + 12], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <AbsoluteFill
+      style={{
+        background: "#bcccb5",
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: formLeft,
+          top: formTop,
+          width: formWidth,
+          borderRadius: tallAspect ? 18 * k : 22 * k,
+          background: "#dde2dc",
+          border: `${1 * k}px solid #9fb09a`,
+          boxShadow:
+            tallAspect
+              ? "0 4px 24px rgba(44, 69, 47, 0.12), 0 2px 0 rgba(255,255,255,0.45) inset"
+              : "0 2px 0 rgba(255,255,255,0.4) inset",
+          padding: `${formPaddingY}px ${formPaddingX}px`,
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8 * k,
+            background: "#e7ece6",
+            border: `${1 * k}px solid #c8d1c6`,
+            borderRadius: 999,
+            padding: `${4 * k}px ${10 * k}px`,
+            color: "#516152",
+            fontSize: 11 * k,
+            fontWeight: 600,
+          }}
+        >
+          <span
+            style={{
+              width: 14 * k,
+              height: 14 * k,
+              borderRadius: "50%",
+              border: `${1.5 * k}px solid #e29c80`,
+              display: "inline-block",
+              boxSizing: "border-box",
+            }}
+          />
+          Verifieringsformulär
+        </div>
+        <div
+          style={{
+            fontSize: (tallAspect ? 22 : 25) * k,
+            fontWeight: 800,
+            color: "#2c452f",
+            marginTop: 12 * k,
+            letterSpacing: tallAspect ? -0.3 : 0,
+          }}
+        >
+          Företagsuppgifter
+        </div>
+        <div style={{ fontSize: (tallAspect ? 12.5 : 13) * k, color: "#4f5d52", marginTop: 5 * k, lineHeight: 1.35 }}>
+          Fyll i uppgifterna nedan för att gå vidare.
+        </div>
+
+        <div
+          style={{
+            height: 1 * k,
+            background: "#c5cec2",
+            marginTop: tallAspect ? 14 * k : 18 * k,
+            marginLeft: -formPaddingX,
+            marginRight: -formPaddingX,
+          }}
+        />
+
+        <div
+          style={{
+            marginTop: 16 * k,
+            height: 8 * k,
+            borderRadius: 999,
+            background: "#d2dbcf",
+          }}
+        >
+          <div style={{ width: "100%", height: "100%", borderRadius: 999, background: "#c7d4c1" }} />
+        </div>
+
+        <div style={{ marginTop: tallAspect ? 14 * k : 18 * k }}>
+          <div style={{ fontSize: (tallAspect ? 15.5 : 17) * k, color: "#334630", marginBottom: 5 * k, fontWeight: 600 }}>
+            Företagsnamn *
+          </div>
+          <div
+            style={{
+              height: (tallAspect ? 44 : 48) * k,
+              borderRadius: 12 * k,
+              border: `${1.5 * k}px solid #b7c4b3`,
+              background: "#f3f3f3",
+              display: "flex",
+              alignItems: "center",
+              paddingLeft: 16 * k,
+              fontSize: (tallAspect ? 16 : 18) * k,
+              color: "#1f2937",
+            }}
+          >
+            {typedQuery}
+          </div>
+        </div>
+
+        <div style={{ marginTop: tallAspect ? 12 * k : 14 * k }}>
+          <div style={{ fontSize: (tallAspect ? 15.5 : 17) * k, color: "#334630", marginBottom: 5 * k, fontWeight: 600 }}>
+            Organisationsnummer *
+          </div>
+          <div
+            style={{
+              height: (tallAspect ? 44 : 48) * k,
+              borderRadius: 12 * k,
+              border: `${1.5 * k}px solid #b7c4b3`,
+              background: "#f3f3f3",
+              display: "flex",
+              alignItems: "center",
+              paddingLeft: 16 * k,
+              fontSize: (tallAspect ? 16 : 18) * k,
+              color: "#607065",
+            }}
+          >
+            559123-4567
+          </div>
+        </div>
+
+        <div style={{ marginTop: tallAspect ? 12 * k : 14 * k }}>
+          <div style={{ fontSize: (tallAspect ? 15.5 : 17) * k, color: "#334630", marginBottom: 5 * k, fontWeight: 600 }}>
+            Kontaktperson *
+          </div>
+          <div
+            style={{
+              height: (tallAspect ? 44 : 48) * k,
+              borderRadius: 12 * k,
+              border: `${1.5 * k}px solid #b7c4b3`,
+              background: "#f3f3f3",
+              display: "flex",
+              alignItems: "center",
+              paddingLeft: 16 * k,
+              fontSize: (tallAspect ? 16 : 18) * k,
+              color: "#607065",
+            }}
+          >
+            Anna Andersson
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: tallAspect ? 16 * k : 20 * k,
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              width: buttonWidth,
+              height: buttonHeight,
+              borderRadius: 12 * k,
+              background: "#efb19f",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#f8ede9",
+              fontSize: (tallAspect ? 16 : 18) * k,
+              fontWeight: 700,
+              transform: `scale(${1 - 0.08 * clickPressProgress})`,
+              boxShadow:
+                clickPressProgress > 0
+                  ? "0 3px 8px rgba(201,120,92,0.32), inset 0 0 0 2px rgba(255,255,255,0.25)"
+                  : "0 6px 14px rgba(201,120,92,0.24)",
+            }}
+          >
+            Registrera
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          left: cursorX,
+          top: cursorY,
+          width: 28 * k,
+          height: 38 * k,
+          zIndex: 20,
+          transform: `scale(${1 + 0.12 * clickPressProgress})`,
+          filter: "drop-shadow(0 3px 8px rgba(15,23,42,0.3))",
+        }}
+      >
+        <svg viewBox="0 0 28 38" style={{ width: "100%", height: "100%" }}>
+          <path
+            d="M2 2 L24 18 L15 20 L19 34 L13 36 L10 22 L2 28 Z"
+            fill="#111827"
+            stroke="#ffffff"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          left: cursorX + 8 * k - (28 * k * clickRippleProgress) / 2,
+          top: cursorY + 18 * k - (28 * k * clickRippleProgress) / 2,
+          width: 28 * k * clickRippleProgress,
+          height: 28 * k * clickRippleProgress,
+          borderRadius: 999,
+          border: `${2 * k}px solid rgba(17,24,39,${0.35 * (1 - clickRippleProgress)})`,
+          opacity: clickPressProgress > 0 ? 1 : Math.max(0, 1 - clickRippleProgress),
+          pointerEvents: "none",
+          zIndex: 19,
+        }}
+      />
+    </AbsoluteFill>
+  );
+};
+
+const StaticScene: React.FC<{
+  frameOffset?: number;
+  layoutWidth?: number;
+  layoutHeight?: number;
+  /** Fixed timeline frame for still previews. Omit to play the full timeline. */
+  lockedFrame?: number;
+  /** When embedded in a shorter `Sequence`, pass its length so scroll/land timing fits the clip. */
+  clipDurationInFrames?: number;
+}> = ({ frameOffset = 0, layoutWidth, layoutHeight, lockedFrame, clipDurationInFrames }) => {
+  const sourceFrame = useCurrentFrame();
+  const timelineFrame = lockedFrame ?? Math.max(0, sourceFrame - frameOffset);
+  const frame = timelineFrame;
+  const { width: cw, height: ch, durationInFrames, fps } = useVideoConfig();
+  const width = layoutWidth ?? cw;
+  const height = layoutHeight ?? ch;
+  const timelineEnd =
+    clipDurationInFrames ?? durationInFrames;
+  const k = width / 1280;
+  const resultsMargin = 96 * k;
+  const resultsX = resultsMargin;
   const resultsY = 290 * k;
-  const resultsW = 740 * k;
+  const resultsW = 1280 * k - resultsMargin * 2;
   const listX = resultsX + resultsW / 2;
-  const cardH = 162 * cardScale;
-  const rowGap = cardH + 16 * k;
-  const firstY = resultsY + 120 * k + cardH / 2;
-  const lastCardBottom = firstY + cardH / 2 + rowGap * COMPANIES.length;
+  /** Nearly full width inside result column; same 720∶162 ratio as design. */
+  const cardInset = 12 * k;
+  const cardWpx = resultsW - 2 * cardInset;
+  const cardHpx = (cardWpx * 162) / 720;
+  const cardUiScale = cardWpx / 720;
+  const rowGap = cardHpx + 14 * k;
+  const firstY = resultsY + 120 * k + cardHpx / 2;
+  const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length;
   const contentHeight = lastCardBottom + 60 * k;
   const scrollDistance = Math.max(0, contentHeight - height);
 
@@ -389,7 +717,7 @@ const StaticScene: React.FC = () => {
   const liftEndFrame = liftStartFrame + liftFrames;
   const scrollStartFrame = liftEndFrame + holdAtTopFrames;
 
-  const remainingFramesForScroll = durationInFrames - scrollStartFrame;
+  const remainingFramesForScroll = timelineEnd - scrollStartFrame;
   const canAnimateScroll = remainingFramesForScroll > 1 && scrollDistance > 0;
   const targetScrollDuration = Math.round(fps * 1.6);
   const scrollDurationFrames = canAnimateScroll
@@ -478,7 +806,7 @@ const StaticScene: React.FC = () => {
   const underCardExtraY = 0;
   const bottomCardY = firstY + rowGap * mariaIndex + landShift + mariaShift;
   const paginationGap = 10 * k;
-  const paginationTop = bottomCardY + cardH / 2 + paginationGap;
+  const paginationTop = bottomCardY + cardHpx / 2 + paginationGap;
 
   const liftShakeIntensity = 0;
 
@@ -570,97 +898,6 @@ const StaticScene: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          top: filterY,
-          left: filterX,
-          width: filterW,
-          borderRadius: 14 * k,
-          border: `${1 * k}px solid #d5dbe0`,
-          background: "#ffffff",
-          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)",
-          padding: `${18 * k}px ${20 * k}px ${20 * k}px`,
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 24 * k, color: "#334630", fontWeight: 700 }}>Filtrera</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 * k, color: "#6b7280", fontSize: 12 * k }}>
-            <Trash2 size={14 * k} color="#6b7280" strokeWidth={1.8} />
-            Rensa
-          </div>
-        </div>
-
-        <div style={{ marginTop: 14 * k, fontSize: 13 * k, color: "#4b5563" }}>Vad behöver du hjälp med?</div>
-        <div
-          style={{
-            marginTop: 6 * k,
-            height: 38 * k,
-            borderRadius: 8 * k,
-            border: `${1 * k}px solid #cbd5e1`,
-            background: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            paddingLeft: 14 * k,
-            fontSize: 13 * k,
-            color: "#1f2937",
-          }}
-        >
-          Snickare
-        </div>
-
-        <div style={{ marginTop: 12 * k, fontSize: 13 * k, color: "#4b5563" }}>Stad</div>
-        <div
-          style={{
-            marginTop: 6 * k,
-            height: 38 * k,
-            borderRadius: 8 * k,
-            border: `${1 * k}px solid #cbd5e1`,
-            background: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            paddingLeft: 14 * k,
-            fontSize: 13 * k,
-            color: "#1f2937",
-          }}
-        >
-          Stockholm
-        </div>
-
-        <div style={{ marginTop: 12 * k, fontSize: 13 * k, color: "#4b5563" }}>Maxpris (SEK)</div>
-        <div
-          style={{
-            marginTop: 6 * k,
-            height: 38 * k,
-            borderRadius: 8 * k,
-            border: `${1 * k}px solid #cbd5e1`,
-            background: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            paddingLeft: 14 * k,
-            fontSize: 13 * k,
-            color: "#9ca3af",
-          }}
-        >
-          t.ex. 300
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 * k }}>
-          <div
-            style={{
-              background: "#334630",
-              color: "#ffffff",
-              fontSize: 13 * k,
-              fontWeight: 700,
-              padding: `${8 * k}px ${24 * k}px`,
-              borderRadius: 8 * k,
-            }}
-          >
-            Sök
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
           top: resultsY,
           left: resultsX,
           width: resultsW,
@@ -730,7 +967,7 @@ const StaticScene: React.FC = () => {
             driveFee={`${120 + ((i * 37) % 360)} kr`}
             baseFee={`${200 + ((i * 53) % 460)} kr`}
             imageUrl={HANTVERK_IMAGES[i % HANTVERK_IMAGES.length]}
-            uiScale={cardScale}
+            uiScale={cardUiScale}
             opacity={i === mariaIndex ? underCardOpacity : 1}
           />
         ))}
@@ -752,7 +989,7 @@ const StaticScene: React.FC = () => {
             driveFee="95 kr"
             baseFee="150 kr"
             imageUrl={HANTVERK_IMAGES[6]}
-            uiScale={cardScale}
+            uiScale={cardUiScale}
             verified
             buildProgress={buildProgress}
           />
@@ -761,7 +998,7 @@ const StaticScene: React.FC = () => {
         <div
           style={{
             position: "absolute",
-            right: 70 * k,
+            left: "50%",
             top: paginationTop,
             height: 52 * k,
             borderRadius: 16 * k,
@@ -774,7 +1011,7 @@ const StaticScene: React.FC = () => {
             boxShadow: "0 10px 20px rgba(15, 23, 42, 0.18)",
             zIndex: 4,
             opacity: underCardOpacity,
-            transform: `translateY(${underCardExtraY}px)`,
+            transform: `translate(-50%, ${underCardExtraY}px)`,
           }}
         >
           <ChevronsLeft size={18 * k} color="rgba(255,255,255,0.65)" strokeWidth={2.1} />
@@ -809,6 +1046,165 @@ const StaticScene: React.FC = () => {
   );
 };
 
-export const HantverkskollenAnimation: React.FC = () => <StaticScene />;
-export const HantverkskollenPremium: React.FC = () => <StaticScene />;
-export const HantverkskollenAd: React.FC = () => <StaticScene />;
+/** Same `StaticScene` math as full composition, scaled down to fit a panel (no narrow-layout quirks). */
+const ScaledPremiumStaticScene: React.FC<{
+  panelWidth: number;
+  panelHeight: number;
+  segmentFrames: number;
+}> = ({ panelWidth, panelHeight, segmentFrames }) => {
+  const { width: cw, height: ch } = useVideoConfig();
+  const scale = panelWidth / cw;
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#ffffff" }}>
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: 0,
+          width: cw,
+          height: ch,
+          transform: `translateX(-50%) scale(${scale})`,
+          transformOrigin: "top center",
+        }}
+      >
+        <StaticScene clipDurationInFrames={segmentFrames} />
+      </div>
+    </div>
+  );
+};
+
+/** Same pattern as `ScaledPremiumStaticScene`: full `HanellGoogleVideo` composition (960×540), scaled to fit, top-aligned, white below. */
+const HANELL_DESIGN_W = 960;
+const HANELL_DESIGN_H = 540;
+
+const ScaledHanellGoogleVideo: React.FC<{
+  panelWidth: number;
+  panelHeight: number;
+}> = ({ panelWidth, panelHeight }) => {
+  const scale = panelWidth / HANELL_DESIGN_W;
+  return (
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#ffffff" }}>
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: 0,
+          width: HANELL_DESIGN_W,
+          height: HANELL_DESIGN_H,
+          transform: `translateX(-50%) scale(${scale})`,
+          transformOrigin: "top center",
+        }}
+      >
+        <HanellGoogleVideo layoutWidth={HANELL_DESIGN_W} layoutHeight={HANELL_DESIGN_H} />
+      </div>
+    </div>
+  );
+};
+
+const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentFrames }) => {
+  const { width, height } = useVideoConfig();
+  const stackGap = 20;
+  const panelWidth = width;
+  const panelHeight = height;
+  const rightSlotH = (panelHeight - stackGap) / 2;
+
+  return (
+    <AbsoluteFill
+      style={{
+        background: "linear-gradient(165deg, #f1f5f9 0%, #dde8d4 45%, #cbd5e1 100%)",
+        fontFamily: "Inter, system-ui, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "stretch",
+          justifyContent: "center",
+          width: "100%",
+          height: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            overflow: "hidden",
+            flexShrink: 0,
+            width: panelWidth,
+            height: panelHeight,
+            position: "relative",
+            background: "#ffffff",
+            display: "flex",
+            flexDirection: "column",
+            gap: stackGap,
+            boxSizing: "border-box",
+          }}
+        >
+          <div style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden" }}>
+            <ScaledPremiumStaticScene
+              panelWidth={panelWidth}
+              panelHeight={rightSlotH}
+              segmentFrames={segmentFrames}
+            />
+          </div>
+          <div style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden" }}>
+            <ScaledHanellGoogleVideo panelWidth={panelWidth} panelHeight={rightSlotH} />
+          </div>
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * 1) Full-screen: type company name + click “Registrera”.
+ * 2) Premium-lista ovanför och Hanell Google under, kant mot kant (100 % bredd).
+ */
+export const HantverkskollenSearchJourney: React.FC = () => {
+  const { fps } = useVideoConfig();
+  const introFrames = Math.round(fps * 2.3);
+  /** Long enough for full StaticScene (pop → scroll → land ≈ 4.7s @ 60fps) plus a short hold. */
+  const splitFrames = Math.round(fps * 6);
+  return (
+    <AbsoluteFill style={{ background: "#0f172a" }}>
+      <Sequence durationInFrames={introFrames}>
+        <IntroCompanyJoinScene />
+      </Sequence>
+      <Sequence from={introFrames} durationInFrames={splitFrames}>
+        <SplitGoogleAndFormScene segmentFrames={splitFrames} />
+      </Sequence>
+    </AbsoluteFill>
+  );
+};
+
+export const HantverkskollenAnimation: React.FC = () => <HantverkskollenWithIntro />;
+const HantverkskollenWithIntro: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const introFrames = Math.round(fps * 2.3);
+  const transitionFrames = Math.round(fps * 0.35);
+  const introOpacity = interpolate(frame, [introFrames - transitionFrames, introFrames], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.4, 0, 0.2, 1),
+  });
+  const mainOpacity = interpolate(frame, [introFrames - transitionFrames, introFrames], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.22, 1, 0.36, 1),
+  });
+
+  return (
+    <AbsoluteFill>
+      <div style={{ position: "absolute", inset: 0, opacity: mainOpacity }}>
+        <StaticScene frameOffset={introFrames} />
+      </div>
+      <div style={{ position: "absolute", inset: 0, opacity: introOpacity }}>
+        <IntroCompanyJoinScene />
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+export const HantverkskollenPremium: React.FC = () => <HantverkskollenWithIntro />;
+export const HantverkskollenAd: React.FC = () => <HantverkskollenWithIntro />;
