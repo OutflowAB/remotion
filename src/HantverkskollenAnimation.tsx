@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Mail,
   MapPin,
+  Menu,
+  FileText,
   Phone,
   Search,
 } from "lucide-react";
@@ -32,6 +34,8 @@ type CardProps = {
   baseFee: string;
   imageUrl: string;
   uiScale: number;
+  cardWidth: number;
+  cardHeight: number;
   opacity?: number;
   buildProgress?: number;
   verified?: boolean;
@@ -113,15 +117,52 @@ const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
       <div
         style={{
           width: "100%",
-          maxWidth: 1536 * uiScale,
+          maxWidth: 1920 * uiScale,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          paddingLeft: 48 * uiScale,
-          paddingRight: 48 * uiScale,
+          paddingLeft: 54 * uiScale,
+          paddingRight: 54 * uiScale,
+          gap: 8 * uiScale,
         }}
       >
         <HantverkskollenLogo width={210 * uiScale} height={60 * uiScale} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10 * uiScale }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: 38 * uiScale,
+              borderRadius: 14 * uiScale,
+              paddingLeft: 16 * uiScale,
+              paddingRight: 16 * uiScale,
+              fontSize: 13 * uiScale,
+              fontWeight: 700,
+              color: "#ffffff",
+              backgroundColor: "#FF7A4A",
+              boxShadow: "0 8px 20px rgba(255, 122, 74, 0.28)",
+              gap: 8 * uiScale,
+            }}
+          >
+            <FileText size={15 * uiScale} color="#ffffff" strokeWidth={2.2} />
+            Fler offerter
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 40 * uiScale,
+              height: 40 * uiScale,
+              color: "#334630",
+              borderRadius: 10 * uiScale,
+              background: "rgba(51, 70, 48, 0.05)",
+            }}
+          >
+            <Menu size={25 * uiScale} strokeWidth={2.2} />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -137,6 +178,8 @@ const Card: React.FC<CardProps> = ({
   baseFee,
   imageUrl,
   uiScale,
+  cardWidth,
+  cardHeight,
   opacity = 1,
   verified = false,
   buildProgress = 1,
@@ -158,8 +201,8 @@ const Card: React.FC<CardProps> = ({
         position: "absolute",
         left: x,
         top: y,
-        width: 720 * uiScale,
-        height: 162 * uiScale,
+        width: cardWidth,
+        height: cardHeight,
         transform: "translate(-50%, -50%)",
         borderRadius: 12 * uiScale,
         backgroundColor: "#ffffff",
@@ -232,7 +275,7 @@ const Card: React.FC<CardProps> = ({
               alignItems: "center",
               gap: 6 * uiScale,
               background: "linear-gradient(90deg, #334630 0%, #4a6b47 100%)",
-              color: "#111111",
+              color: "#ffffff",
               borderRadius: 999,
               padding: `${7 * uiScale}px ${14 * uiScale}px`,
               fontSize: 12 * uiScale,
@@ -326,13 +369,13 @@ const COMPANIES: { title: string; subtitle: string; price: string }[] = [
   { title: "Maria Park Hantverk", subtitle: "Mariatorget 4, 118 48 Stockholm", price: "610" },
 ];
 
-const FORM_TYPING_CHARS_PER_FRAME = 0.68;
+const FORM_TYPING_CHARS_PER_FRAME = 0.74;
 const FORM_TYPING_START_FRAME = 10;
-const FORM_PAUSE_BETWEEN_FIELDS_SECONDS = 0.2;
-const FORM_DELAY_BEFORE_MOVE_SECONDS = 0.3;
+const FORM_PAUSE_BETWEEN_FIELDS_SECONDS = 0.15;
+const FORM_DELAY_BEFORE_MOVE_SECONDS = 0.25;
 const FORM_CURSOR_MOVE_SECONDS = 0.3;
-const FORM_DELAY_AFTER_ARRIVAL_SECONDS = 0.3;
-const FORM_EXTRA_AFTER_PULSE_SECONDS = 0.05;
+const FORM_DELAY_AFTER_ARRIVAL_SECONDS = 0.25;
+const FORM_EXTRA_AFTER_PULSE_SECONDS = 0.03;
 const FORM_NAME = "Anderssons Måleri AB";
 const FORM_ORG = "559123-4567";
 const FORM_CONTACT = "Anna Andersson";
@@ -705,7 +748,7 @@ const StaticScene: React.FC<{
   startDelayFrames = 0,
   contentStartOffsetYPx = 90,
   compactContentLayer = false,
-  showNavbar = true,
+  showNavbar = false,
   layoutWidth,
   layoutHeight,
   lockedFrame,
@@ -719,19 +762,28 @@ const StaticScene: React.FC<{
   const height = layoutHeight ?? ch;
   const timelineEnd =
     clipDurationInFrames ?? durationInFrames;
+  /** Tall canvas (e.g. 2520×2831): redesign positioning so content fills the frame; wide 16∶9: keep original look. */
+  const tallAspect = height / width >= 1.02;
   const k = width / 1280;
-  const resultsMargin = 96 * k;
+  const resultsMargin = tallAspect ? 60 * k : 96 * k;
   const resultsX = resultsMargin;
-  const resultsY = 290 * k;
-  const resultsW = 1280 * k - resultsMargin * 2;
+  const resultsW = width - resultsMargin * 2;
   const listX = resultsX + resultsW / 2;
-  /** Nearly full width inside result column; same 720∶162 ratio as design. */
-  const cardInset = 12 * k;
+  const cardInset = tallAspect ? 18 * k : 12 * k;
   const cardWpx = resultsW - 2 * cardInset;
-  const cardHpx = (cardWpx * 162) / 720;
+  /** Card aspect: 720∶146 on wide canvas, 720∶188 on tall canvas (compact listing rows). */
+  const cardAspect = tallAspect ? 188 / 720 : 146 / 720;
+  const cardHpx = cardWpx * cardAspect;
   const cardUiScale = cardWpx / 720;
-  const rowGap = cardHpx + 14 * k;
-  const firstY = resultsY + 120 * k + cardHpx / 2;
+  const rowGap = cardHpx + (tallAspect ? 22 : 14) * k;
+  /** Header section + filter bar above the card list. */
+  const headerTop = tallAspect ? 70 * k : 100 * k;
+  const headerHeight = tallAspect ? 250 * k : 0;
+  const searchTop = tallAspect ? headerTop + headerHeight - 30 * k : 208 * k;
+  const searchHeight = tallAspect ? 76 * k : 50 * k;
+  const resultsY = tallAspect ? searchTop + searchHeight + 40 * k : 290 * k;
+  const resultsHeaderH = tallAspect ? 150 * k : 120 * k;
+  const firstY = resultsY + resultsHeaderH + cardHpx / 2;
   const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length;
   const contentHeight = lastCardBottom + 60 * k;
   const movingLayerHeight = compactContentLayer ? height : contentHeight;
@@ -884,110 +936,139 @@ const StaticScene: React.FC<{
           willChange: "transform",
         }}
       >
-        <div style={{ position: "absolute", top: 100 * k, left: 96 * k, display: "flex", alignItems: "center", gap: 18 * k }}>
-        <Img
-          src={staticFile("snickare.png")}
+        <div
           style={{
-            width: 70 * k,
-            height: 70 * k,
-            borderRadius: "50%",
-            objectFit: "cover",
+            position: "absolute",
+            top: headerTop,
+            left: resultsX,
+            right: resultsX,
+            display: "flex",
+            alignItems: "center",
+            gap: (tallAspect ? 28 : 18) * k,
           }}
-        />
-        <div>
-          <div style={{ fontSize: 44 * k, fontWeight: 800, color: "#334630", letterSpacing: -0.5 }}>
-            Snickare i Stockholm
-          </div>
-          <div style={{ fontSize: 18 * k, color: "#475569", marginTop: 4 * k, marginBottom: 36 * k }}>
-            Se timpriser direkt och filtrera på betyg.
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          top: 208 * k,
-          left: 184 * k,
-          width: 560 * k,
-          height: 50 * k,
-          borderRadius: 999,
-          border: `${1 * k}px solid #d5dbe0`,
-          background: "#ffffff",
-          boxShadow: "0 8px 18px rgba(15, 23, 42, 0.06)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingLeft: 22 * k,
-          paddingRight: 22 * k,
-          fontSize: 15 * k,
-          color: "#94a3b8",
-        }}
-      >
-        Sök hantverkare, tjänst eller plats
-        <Search size={18 * k} color="#94a3b8" strokeWidth={2} />
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          top: resultsY,
-          left: resultsX,
-          width: resultsW,
-          borderRadius: 14 * k,
-          border: `${1 * k}px solid #d5dbe0`,
-          background: "#ffffff",
-          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)",
-          padding: `${14 * k}px ${20 * k}px ${18 * k}px`,
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 16 * k, color: "#1f2937" }}>145 Resultat</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 * k }}>
-            <span style={{ fontSize: 13 * k, color: "#374151" }}>ROT-avdrag</span>
+        >
+          <Img
+            src={staticFile("snickare.png")}
+            style={{
+              width: (tallAspect ? 110 : 70) * k,
+              height: (tallAspect ? 110 : 70) * k,
+              borderRadius: "50%",
+              objectFit: "cover",
+              flexShrink: 0,
+            }}
+          />
+          <div>
             <div
               style={{
-                width: 36 * k,
-                height: 18 * k,
-                borderRadius: 999,
-                background: "#e5e7eb",
-                display: "flex",
-                alignItems: "center",
-                paddingLeft: 2 * k,
+                fontSize: (tallAspect ? 64 : 44) * k,
+                fontWeight: 800,
+                color: "#334630",
+                letterSpacing: -0.5,
+                lineHeight: 1.05,
               }}
             >
-              <div
-                style={{
-                  width: 14 * k,
-                  height: 14 * k,
-                  borderRadius: 999,
-                  background: "#ffffff",
-                  boxShadow: "0 1px 2px rgba(15,23,42,0.2)",
-                }}
-              />
+              Snickare i Stockholm
+            </div>
+            <div
+              style={{
+                fontSize: (tallAspect ? 24 : 18) * k,
+                color: "#475569",
+                marginTop: (tallAspect ? 8 : 4) * k,
+              }}
+            >
+              Se timpriser direkt och filtrera på betyg.
             </div>
           </div>
         </div>
+
         <div
           style={{
-            marginTop: 12 * k,
-            height: 42 * k,
-            borderRadius: 10 * k,
+            position: "absolute",
+            top: searchTop,
+            left: tallAspect ? resultsX : 184 * k,
+            width: tallAspect ? resultsW : 560 * k,
+            height: searchHeight,
+            borderRadius: 999,
             border: `${1 * k}px solid #d5dbe0`,
             background: "#ffffff",
+            boxShadow: "0 8px 18px rgba(15, 23, 42, 0.06)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingLeft: 16 * k,
-            paddingRight: 14 * k,
-            fontSize: 13 * k,
-            color: "#374151",
+            paddingLeft: (tallAspect ? 32 : 22) * k,
+            paddingRight: (tallAspect ? 32 : 22) * k,
+            fontSize: (tallAspect ? 22 : 15) * k,
+            color: "#94a3b8",
           }}
         >
-          Sortera
-          <ChevronDown size={16 * k} color="#6b7280" strokeWidth={2} />
+          Sök hantverkare, tjänst eller plats
+          <Search size={(tallAspect ? 26 : 18) * k} color="#94a3b8" strokeWidth={2} />
         </div>
-      </div>
+
+        <div
+          style={{
+            position: "absolute",
+            top: resultsY,
+            left: resultsX,
+            width: resultsW,
+            borderRadius: (tallAspect ? 18 : 14) * k,
+            border: `${1 * k}px solid #d5dbe0`,
+            background: "#ffffff",
+            boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)",
+            padding: tallAspect
+              ? `${22 * k}px ${28 * k}px ${24 * k}px`
+              : `${14 * k}px ${20 * k}px ${18 * k}px`,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: (tallAspect ? 24 : 16) * k, color: "#1f2937", fontWeight: 600 }}>
+              145 Resultat
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: (tallAspect ? 12 : 8) * k }}>
+              <span style={{ fontSize: (tallAspect ? 18 : 13) * k, color: "#374151" }}>ROT-avdrag</span>
+              <div
+                style={{
+                  width: (tallAspect ? 50 : 36) * k,
+                  height: (tallAspect ? 26 : 18) * k,
+                  borderRadius: 999,
+                  background: "#e5e7eb",
+                  display: "flex",
+                  alignItems: "center",
+                  paddingLeft: (tallAspect ? 3 : 2) * k,
+                }}
+              >
+                <div
+                  style={{
+                    width: (tallAspect ? 20 : 14) * k,
+                    height: (tallAspect ? 20 : 14) * k,
+                    borderRadius: 999,
+                    background: "#ffffff",
+                    boxShadow: "0 1px 2px rgba(15,23,42,0.2)",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            style={{
+              marginTop: (tallAspect ? 16 : 12) * k,
+              height: (tallAspect ? 60 : 42) * k,
+              borderRadius: (tallAspect ? 14 : 10) * k,
+              border: `${1 * k}px solid #d5dbe0`,
+              background: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingLeft: (tallAspect ? 22 : 16) * k,
+              paddingRight: (tallAspect ? 20 : 14) * k,
+              fontSize: (tallAspect ? 20 : 13) * k,
+              color: "#374151",
+            }}
+          >
+            Sortera
+            <ChevronDown size={(tallAspect ? 24 : 16) * k} color="#6b7280" strokeWidth={2} />
+          </div>
+        </div>
 
         {COMPANIES.map((company, i) => (
           <Card
@@ -1001,6 +1082,8 @@ const StaticScene: React.FC<{
             baseFee={`${200 + ((i * 53) % 460)} kr`}
             imageUrl={HANTVERK_IMAGES[i % HANTVERK_IMAGES.length]}
             uiScale={cardUiScale}
+            cardWidth={cardWpx}
+            cardHeight={cardHpx}
             opacity={i === mariaIndex ? underCardOpacity : 1}
           />
         ))}
@@ -1023,6 +1106,8 @@ const StaticScene: React.FC<{
             baseFee="150 kr"
             imageUrl={HANTVERK_IMAGES[6]}
             uiScale={cardUiScale}
+            cardWidth={cardWpx}
+            cardHeight={cardHpx}
             verified
             buildProgress={buildProgress}
           />
@@ -1033,44 +1118,44 @@ const StaticScene: React.FC<{
             position: "absolute",
             left: "50%",
             top: paginationTop,
-            height: 52 * k,
-            borderRadius: 16 * k,
+            height: (tallAspect ? 76 : 52) * k,
+            borderRadius: (tallAspect ? 22 : 16) * k,
             background: "#334630",
             color: "#ffffff",
             display: "flex",
             alignItems: "center",
-            gap: 16 * k,
-            padding: `${0}px ${24 * k}px`,
+            gap: (tallAspect ? 22 : 16) * k,
+            padding: `0px ${(tallAspect ? 32 : 24) * k}px`,
             boxShadow: "0 10px 20px rgba(15, 23, 42, 0.18)",
             zIndex: 4,
             opacity: underCardOpacity,
             transform: `translate(-50%, ${underCardExtraY}px)`,
           }}
         >
-          <ChevronsLeft size={18 * k} color="rgba(255,255,255,0.65)" strokeWidth={2.1} />
-          <ChevronLeft size={18 * k} color="rgba(255,255,255,0.65)" strokeWidth={2.1} />
+          <ChevronsLeft size={(tallAspect ? 24 : 18) * k} color="rgba(255,255,255,0.65)" strokeWidth={2.1} />
+          <ChevronLeft size={(tallAspect ? 24 : 18) * k} color="rgba(255,255,255,0.65)" strokeWidth={2.1} />
           <div
             style={{
-              width: 34 * k,
-              height: 34 * k,
-              borderRadius: 10 * k,
+              width: (tallAspect ? 48 : 34) * k,
+              height: (tallAspect ? 48 : 34) * k,
+              borderRadius: (tallAspect ? 14 : 10) * k,
               background: "#ffffff",
               color: "#1f2937",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 18 * k,
+              fontSize: (tallAspect ? 24 : 18) * k,
               fontWeight: 700,
               lineHeight: 1,
             }}
           >
             1
           </div>
-          <div style={{ fontSize: 18 * k, fontWeight: 600 }}>2</div>
-          <div style={{ fontSize: 18 * k, color: "rgba(255,255,255,0.75)" }}>...</div>
-          <div style={{ fontSize: 18 * k, fontWeight: 600 }}>15</div>
-          <ChevronRight size={18 * k} color="rgba(255,255,255,0.9)" strokeWidth={2.1} />
-          <ChevronsRight size={18 * k} color="rgba(255,255,255,0.9)" strokeWidth={2.1} />
+          <div style={{ fontSize: (tallAspect ? 24 : 18) * k, fontWeight: 600 }}>2</div>
+          <div style={{ fontSize: (tallAspect ? 24 : 18) * k, color: "rgba(255,255,255,0.75)" }}>...</div>
+          <div style={{ fontSize: (tallAspect ? 24 : 18) * k, fontWeight: 600 }}>15</div>
+          <ChevronRight size={(tallAspect ? 24 : 18) * k} color="rgba(255,255,255,0.9)" strokeWidth={2.1} />
+          <ChevronsRight size={(tallAspect ? 24 : 18) * k} color="rgba(255,255,255,0.9)" strokeWidth={2.1} />
         </div>
       </div>
 
