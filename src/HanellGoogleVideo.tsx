@@ -139,11 +139,29 @@ const ResultRow: React.FC<ResultRowProps> = ({
   );
 };
 
+/** Wordmark paths derived from the original outline; fills match Google brand palette (red / blue / yellow / green). */
 const GoogleMark: React.FC<{ size?: number }> = ({ size = 92 }) => (
   <svg width={size} height={size * 0.33} viewBox="0 0 92 30" aria-hidden style={{ display: "block" }}>
     <path
-      fill="#4285f4"
-      d="M38.9 15.51c0 4.26-3.32 7.39-7.4 7.39s-7.4-3.14-7.4-7.39c0-4.28 3.32-7.39 7.4-7.39s7.4 3.1 7.4 7.39zm-3.24 0c0-2.66-1.93-4.48-4.16-4.48-2.23 0-4.16 1.82-4.16 4.48 0 2.63 1.93 4.48 4.16 4.48 2.23 0 4.16-1.85 4.16-4.48zm-23.7 7.47C5.63 22.98.31 17.83.31 11.5S5.63.02 11.96.02c3.5 0 5.99 1.37 7.87 3.16L17.62 5.4c-1.34-1.26-3.16-2.24-5.66-2.24-4.62 0-8.23 3.72-8.23 8.34 0 4.62 3.61 8.34 8.23 8.34 3 0 4.7-1.2 5.79-2.3.9-.9 1.49-2.2 1.74-4.17H12v-3.14h10.52c.11.56.17 1.23.17 1.96 0 2.35-.64 5.49-2.72 7.56-2.02 2.11-4.59 3.23-8.01 3.23zm42.94-7.47c0 4.26-3.32 7.39-7.4 7.39s-7.4-3.14-7.4-7.39c0-4.28 3.32-7.39 7.4-7.39s7.4 3.1 7.4 7.39zm-3.24 0c0-2.66-1.93-4.48-4.16-4.48-2.23 0-4.16 1.82-4.16 4.48 0 2.63 1.93 4.48 4.16 4.48 2.23 0 4.16-1.85 4.16-4.48zM70 8.56v13.27c0 5.46-3.05 7.7-6.86 7.7-3.58 0-5.74-2.41-6.55-4.37l2.83-1.18c.5 1.2 1.74 2.63 3.72 2.63 2.44 0 3.78-1.51 3.78-4.34v-1.06h-.11c-.73.9-2.04 1.68-3.81 1.68-3.7 0-7-3.22-7-7.36 0-4.17 3.3-7.42 7-7.42 1.76 0 3.08.78 3.81 1.65h.11v-1.2H70zm-2.86 6.97c0-2.6-1.74-4.51-3.95-4.51-2.24 0-3.95 1.9-3.95 4.51 0 2.58 1.71 4.45 3.95 4.45 2.22.01 3.95-1.87 3.95-4.45zM75 1.17V22.9h-3V1.17h3zm12.5 16.77l2.48 1.68c-.8 1.2-2.73 3.28-6.06 3.28-4.13 0-7.22-3.25-7.22-7.39 0-4.4 3.11-7.39 6.86-7.39 3.78 0 5.62 3.05 6.23 4.7l.31.85-9.71 4.08c.74 1.48 1.9 2.24 3.53 2.24s2.76-.82 3.58-2.05zm-7.63-2.66l6.5-2.74c-.36-.92-1.43-1.57-2.7-1.57-1.62 0-3.88 1.46-3.8 4.31z"
+      fill="#EA4335"
+      d="M 38.9,15.51 c 0,4.26 -3.32,7.39 -7.4,7.39 s -7.4,-3.14 -7.4,-7.39 c 0,-4.28 3.32,-7.39 7.4,-7.39 s 7.4,3.1 7.4,7.39 z m -3.24,0 c 0,-2.66 -1.93,-4.48 -4.16,-4.48 c -2.23,0 -4.16,1.82 -4.16,4.48 c 0,2.63 1.93,4.48 4.16,4.48 c 2.23,0 4.16,-1.85 4.16,-4.48 z"
+    />
+    <path
+      fill="#4285F4"
+      d="m 11.96,22.98 C 5.63,22.98 0.31,17.83 0.31,11.5 S 5.63,0.02 11.96,0.02 c 3.5,0 5.99,1.37 7.87,3.16 L 17.62,5.4 c -1.34,-1.26 -3.16,-2.24 -5.66,-2.24 c -4.62,0 -8.23,3.72 -8.23,8.34 c 0,4.62 3.61,8.34 8.23,8.34 c 3,0 4.7,-1.2 5.79,-2.3 c 0.9,-0.9 1.49,-2.2 1.74,-4.17 H 12 v -3.14 h 10.52 c 0.11,0.56 0.17,1.23 0.17,1.96 c 0,2.35 -0.64,5.49 -2.72,7.56 c -2.02,2.11 -4.59,3.23 -8.01,3.23 z"
+    />
+    <path
+      fill="#FBBC04"
+      d="m 54.9,15.51 c 0,4.26 -3.32,7.39 -7.4,7.39 s -7.4,-3.14 -7.4,-7.39 c 0,-4.28 3.32,-7.39 7.4,-7.39 s 7.4,3.1 7.4,7.39 z m -3.24,0 c 0,-2.66 -1.93,-4.48 -4.16,-4.48 c -2.23,0 -4.16,1.82 -4.16,4.48 c 0,2.63 1.93,4.48 4.16,4.48 c 2.23,0 4.16,-1.85 4.16,-4.48 z"
+    />
+    <path
+      fill="#4285F4"
+      d="M 70,8.56 v 13.27 c 0,5.46 -3.05,7.7 -6.86,7.7 c -3.58,0 -5.74,-2.41 -6.55,-4.37 l 2.83,-1.18 c 0.5,1.2 1.74,2.63 3.72,2.63 c 2.44,0 3.78,-1.51 3.78,-4.34 v -1.06 h -0.11 c -0.73,0.9 -2.04,1.68 -3.81,1.68 c -3.7,0 -7,-3.22 -7,-7.36 c 0,-4.17 3.3,-7.42 7,-7.42 c 1.76,0 3.08,0.78 3.81,1.65 h 0.11 v -1.2 H 70 z m -2.86,6.97 c 0,-2.6 -1.74,-4.51 -3.95,-4.51 c -2.24,0 -3.95,1.9 -3.95,4.51 c 0,2.58 1.71,4.45 3.95,4.45 c 2.22,0.01 3.95,-1.87 3.95,-4.45 z"
+    />
+    <path fill="#34A853" d="M 75,1.17 V 22.9 h -3 V 1.17 h 3 z" />
+    <path
+      fill="#EA4335"
+      d="m 87.5,17.94 l 2.48,1.68 c -0.8,1.2 -2.73,3.28 -6.06,3.28 c -4.13,0 -7.22,-3.25 -7.22,-7.39 c 0,-4.4 3.11,-7.39 6.86,-7.39 c 3.78,0 5.62,3.05 6.23,4.7 l 0.31,0.85 l -9.71,4.08 c 0.74,1.48 1.9,2.24 3.53,2.24 s 2.76,-0.82 3.58,-2.05 z m -7.63,-2.66 l 6.5,-2.74 c -0.36,-0.92 -1.43,-1.57 -2.7,-1.57 c -1.62,0 -3.88,1.46 -3.8,4.31 z"
     />
   </svg>
 );
@@ -445,8 +463,11 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
   const width = layoutWidth ?? cw;
   const height = layoutHeight ?? ch;
   const k = width / 1920;
+  /** Sticky Google-chrome (sökfält + flikar) — större än övriga layouten i smala embeds (t.ex. 960-design). */
+  const GOOGLE_CHROME_SCALE = 1.85;
+  const ck = k * GOOGLE_CHROME_SCALE;
 
-  const contentTop = 72 * k + 58 * k + 58 * k;
+  const contentTop = 188 * ck;
   const mainColumnHeader =
     20 * k + (14 * k + 12 * k) + 20 * k + 18 * k;
   const paginationHeight = GOOGLE_PAGINATION_HEIGHT_PX * k * GOOGLE_RESULT_ROW_SCALE;
@@ -490,48 +511,48 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
         {/* Top search row */}
         <div
           style={{
-            padding: `${18 * k}px 0px ${12 * k}px ${28 * k}px`,
+            padding: `${18 * ck}px ${28 * ck}px ${12 * ck}px ${28 * ck}px`,
             display: "flex",
             alignItems: "center",
-            gap: 24 * k,
+            gap: 24 * ck,
             borderBottom: `1px solid ${BORDER}`,
           }}
         >
-          <GoogleMark size={Math.round(88 * k)} />
-          <div style={{ flex: 1, maxWidth: 860 * k, display: "flex", alignItems: "center" }}>
+          <GoogleMark size={Math.round(88 * ck)} />
+          <div style={{ flex: 1, maxWidth: 860 * ck, display: "flex", alignItems: "center" }}>
             <div
               style={{
                 flex: 1,
                 display: "flex",
                 alignItems: "center",
-                minHeight: 48 * k,
+                minHeight: 48 * ck,
                 borderRadius: 999,
                 background: SURFACE,
                 border: `1px solid ${BORDER}`,
-                padding: `0 ${14 * k}px`,
+                padding: `0 ${14 * ck}px`,
                 boxShadow: "0 1px 6px rgba(32,33,36,0.16)",
               }}
             >
-              <Search size={20 * k} color={LINK} strokeWidth={2} style={{ flexShrink: 0 }} />
+              <Search size={20 * ck} color={LINK} strokeWidth={2} style={{ flexShrink: 0 }} />
               <div
                 style={{
                   flex: 1,
-                  marginLeft: 12 * k,
-                  fontSize: 16 * k,
+                  marginLeft: 12 * ck,
+                  fontSize: 16 * ck,
                   color: TEXT,
-                  padding: `${12 * k}px ${8 * k}px 0`,
+                  padding: `${12 * ck}px ${8 * ck}px 0`,
                 }}
               >
                 Hanell Vvs Konsult
               </div>
-              <Mic size={20 * k} color={MUTED} strokeWidth={2} style={{ marginRight: 16 * k }} />
-              <Camera size={20 * k} color={MUTED} strokeWidth={2} />
+              <Mic size={20 * ck} color={MUTED} strokeWidth={2} style={{ marginRight: 16 * ck }} />
+              <Camera size={20 * ck} color={MUTED} strokeWidth={2} />
             </div>
           </div>
           <div
             style={{
-              width: 36 * k,
-              height: 36 * k,
+              width: 36 * ck,
+              height: 36 * ck,
               borderRadius: "50%",
               background: `linear-gradient(135deg, #5b8cff, #2dd4bf)`,
               marginLeft: "auto",
@@ -543,10 +564,10 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
         {/* Tabs */}
         <div
           style={{
-            padding: `${4 * k}px ${28 * k}px 0`,
+            padding: `${4 * ck}px ${28 * ck}px 0`,
             display: "flex",
             alignItems: "flex-end",
-            gap: 4 * k,
+            gap: 4 * ck,
             borderBottom: `1px solid ${BORDER}`,
           }}
         >
@@ -556,9 +577,9 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
               <div
                 key={label}
                 style={{
-                  padding: `${10 * k}px ${10 * k}px ${10 * k}px`,
-                  marginRight: 8 * k,
-                  fontSize: 14 * k,
+                  padding: `${10 * ck}px ${10 * ck}px ${10 * ck}px`,
+                  marginRight: 8 * ck,
+                  fontSize: 14 * ck,
                   color: selected ? TEXT : MUTED,
                   borderBottom: selected ? `3px solid ${TEXT}` : "3px solid transparent",
                   fontWeight: selected ? 500 : 400,
