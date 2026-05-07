@@ -297,13 +297,6 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
       "Reportage om regionala satsningar och entreprenörer. Intervjuer med branschprofiler och listor över nystartade bolag.",
   },
   {
-    title: "Värmepump och fjärrvärme – ekonomi och drift",
-    urlPath: "https://www.energimyndigheten.se › stöd › ...",
-    source: "Energimyndigheten",
-    snippet:
-      "Beräkna besparing och klimatpåverkan. Länkar till bidrag och krav på installerad effekt i småhus och flerbostadshus.",
-  },
-  {
     title: "Hanell – träffar på efternamn och adress",
     urlPath: "https://www.ratsit.se › person › ...",
     source: "Ratsit",

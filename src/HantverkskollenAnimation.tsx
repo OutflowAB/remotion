@@ -15,7 +15,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  FileText,
   Mail,
   MapPin,
   Phone,
@@ -123,38 +122,6 @@ const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
         }}
       >
         <HantverkskollenLogo width={210 * uiScale} height={60 * uiScale} />
-        <div style={{ display: "flex", alignItems: "center", gap: 16 * uiScale, marginLeft: "auto" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8 * uiScale,
-              borderRadius: 16 * uiScale,
-              background: "#FF7A4A",
-              color: "#fff",
-              fontSize: 14 * uiScale,
-              fontWeight: 700,
-              padding: `${8 * uiScale}px ${16 * uiScale}px`,
-              border: `${2 * uiScale}px solid rgba(255,255,255,0.4)`,
-              boxShadow: "0 10px 20px rgba(255,122,74,0.25)",
-            }}
-          >
-            <FileText size={14 * uiScale} color="#ffffff" strokeWidth={2.2} style={{ flexShrink: 0 }} />
-            Få flera offerter
-          </div>
-          <div
-            style={{
-              color: "#334630",
-              fontSize: 26 * uiScale,
-              fontWeight: 500,
-              paddingLeft: 12 * uiScale,
-              paddingRight: 4 * uiScale,
-              lineHeight: 1,
-            }}
-          >
-            ☰
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -265,7 +232,7 @@ const Card: React.FC<CardProps> = ({
               alignItems: "center",
               gap: 6 * uiScale,
               background: "linear-gradient(90deg, #334630 0%, #4a6b47 100%)",
-              color: "#ffffff",
+              color: "#111111",
               borderRadius: 999,
               padding: `${7 * uiScale}px ${14 * uiScale}px`,
               fontSize: 12 * uiScale,
@@ -359,6 +326,36 @@ const COMPANIES: { title: string; subtitle: string; price: string }[] = [
   { title: "Maria Park Hantverk", subtitle: "Mariatorget 4, 118 48 Stockholm", price: "610" },
 ];
 
+const FORM_TYPING_CHARS_PER_FRAME = 0.68;
+const FORM_TYPING_START_FRAME = 10;
+const FORM_PAUSE_BETWEEN_FIELDS_SECONDS = 0.2;
+const FORM_DELAY_BEFORE_MOVE_SECONDS = 0.3;
+const FORM_CURSOR_MOVE_SECONDS = 0.3;
+const FORM_DELAY_AFTER_ARRIVAL_SECONDS = 0.3;
+const FORM_EXTRA_AFTER_PULSE_SECONDS = 0.05;
+const FORM_NAME = "Anderssons Måleri AB";
+const FORM_ORG = "559123-4567";
+const FORM_CONTACT = "Anna Andersson";
+
+const getFormSubmitClickFrame = (fps: number) => {
+  const pauseBetweenFields = Math.round(fps * FORM_PAUSE_BETWEEN_FIELDS_SECONDS);
+  const nameTypingFrames = Math.ceil(FORM_NAME.length / FORM_TYPING_CHARS_PER_FRAME);
+  const orgTypingFrames = Math.ceil(FORM_ORG.length / FORM_TYPING_CHARS_PER_FRAME);
+  const contactTypingFrames = Math.ceil(FORM_CONTACT.length / FORM_TYPING_CHARS_PER_FRAME);
+  const typingDoneFrame =
+    FORM_TYPING_START_FRAME +
+    nameTypingFrames +
+    pauseBetweenFields +
+    orgTypingFrames +
+    pauseBetweenFields +
+    contactTypingFrames;
+  const moveStartDelay = Math.round(fps * FORM_DELAY_BEFORE_MOVE_SECONDS);
+  const moveDuration = Math.round(fps * FORM_CURSOR_MOVE_SECONDS);
+  const afterArrivalDelay = Math.round(fps * FORM_DELAY_AFTER_ARRIVAL_SECONDS);
+  const afterPulseDelay = Math.round(fps * FORM_EXTRA_AFTER_PULSE_SECONDS);
+  return typingDoneFrame + moveStartDelay + moveDuration + afterArrivalDelay + afterPulseDelay;
+};
+
 const IntroCompanyJoinScene: React.FC<{
   layoutWidth?: number;
   layoutHeight?: number;
@@ -370,10 +367,10 @@ const IntroCompanyJoinScene: React.FC<{
   const { width: cw, height: ch, fps } = useVideoConfig();
   const width = layoutWidth ?? cw;
   const height = layoutHeight ?? ch;
-  const k = width / 1280;
+  const k = width / 900;
   /** Tall canvas (t.ex. 2520×2831): smalare kort centrerat; bred 16∶9: som tidigare. */
   const tallAspect = height / width >= 1.02;
-  const formWidth = tallAspect ? Math.min(width * 0.92, 640 * k) : width * 0.78;
+  const formWidth = tallAspect ? Math.min(width, 1450) : width;
   const formPaddingX = tallAspect ? 20 * k : 22 * k;
   const formPaddingY = tallAspect ? 16 * k : 18 * k;
   /** Innehållshöjd (ungefär) för vertikal centrering — utan enorm tom yta. */
@@ -404,51 +401,65 @@ const IntroCompanyJoinScene: React.FC<{
   const nextButtonTop = formTop + formOuterH - formPaddingY - buttonHeight;
   const nextButtonCenterX = nextButtonLeft + buttonWidth * 0.5;
   const nextButtonCenterY = nextButtonTop + buttonHeight * 0.5;
-  /** Till mitten av första fältet (Företagsnamn) för pekare under maskinskrivning. */
   const nameFieldLeft = formLeft + formPaddingX + 16 * k;
-  const nameFieldMidY =
-    formTop +
-    formPaddingY +
-    26 * k +
-    14 * k +
-    25 * k +
-    6 * k +
-    13 * k +
-    18 * k +
-    1 * k +
-    16 * k +
-    8 * k +
-    18 * k +
-    17 * k +
-    6 * k +
-    24 * k * 0.5;
-  const fullQuery = "Anderssons Måleri AB";
-  const startTypingFrame = 10;
-  const charsPerFrame = 0.45;
-  const typedChars = Math.max(0, Math.floor((frame - startTypingFrame) * charsPerFrame));
-  const typedQuery = fullQuery.slice(0, Math.min(fullQuery.length, typedChars));
-  const typingDoneFrame = startTypingFrame + Math.ceil(fullQuery.length / charsPerFrame);
-  const clickFrame = typingDoneFrame + Math.round(fps * 0.45);
-  const clickPressProgress = interpolate(frame, [clickFrame, clickFrame + 4, clickFrame + 8], [0, 1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const fullQuery = FORM_NAME;
+  const fullOrgNumber = FORM_ORG;
+  const fullContactName = FORM_CONTACT;
+  const startTypingFrame = FORM_TYPING_START_FRAME;
+  const charsPerFrame = FORM_TYPING_CHARS_PER_FRAME;
+  const pauseBetweenFields = Math.round(fps * FORM_PAUSE_BETWEEN_FIELDS_SECONDS);
+
+  const nameTypingFrames = Math.ceil(fullQuery.length / charsPerFrame);
+  const orgTypingStartFrame = startTypingFrame + nameTypingFrames + pauseBetweenFields;
+  const orgTypingFrames = Math.ceil(fullOrgNumber.length / charsPerFrame);
+  const contactTypingStartFrame = orgTypingStartFrame + orgTypingFrames + pauseBetweenFields;
+
+  const typedNameChars = Math.max(0, Math.floor((frame - startTypingFrame) * charsPerFrame));
+  const typedQuery = fullQuery.slice(0, Math.min(fullQuery.length, typedNameChars));
+  const typedOrgChars = Math.max(0, Math.floor((frame - orgTypingStartFrame) * charsPerFrame));
+  const typedOrgNumber = fullOrgNumber.slice(0, Math.min(fullOrgNumber.length, typedOrgChars));
+  const typedContactChars = Math.max(0, Math.floor((frame - contactTypingStartFrame) * charsPerFrame));
+  const typedContactName = fullContactName.slice(0, Math.min(fullContactName.length, typedContactChars));
+  const completedFields =
+    (typedQuery.length >= fullQuery.length ? 1 : 0) +
+    (typedOrgNumber.length >= fullOrgNumber.length ? 1 : 0) +
+    (typedContactName.length >= fullContactName.length ? 1 : 0);
+  const formProgress = completedFields / 3;
+  const typingDoneFrame = contactTypingStartFrame + Math.ceil(fullContactName.length / charsPerFrame);
+  const isFormComplete = completedFields === 3;
+  const moveToButtonStartFrame = typingDoneFrame + Math.round(fps * FORM_DELAY_BEFORE_MOVE_SECONDS);
+  const cursorArrivalFrame = moveToButtonStartFrame + Math.round(fps * FORM_CURSOR_MOVE_SECONDS);
   const cursorX = interpolate(
     frame,
-    [0, typingDoneFrame, clickFrame],
-    [nameFieldLeft + 6 * k, nameFieldLeft + 268 * k, nextButtonCenterX - 12 * k],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.bezier(0.22, 1, 0.36, 1) },
+    [0, moveToButtonStartFrame, cursorArrivalFrame],
+    [nameFieldLeft + 12 * k, nameFieldLeft + 12 * k, nextButtonCenterX - 12 * k],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   const cursorY = interpolate(
     frame,
-    [0, typingDoneFrame, clickFrame],
-    [nameFieldMidY - 6 * k, nameFieldMidY - 6 * k, nextButtonCenterY - 10 * k],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.bezier(0.22, 1, 0.36, 1) },
+    [0, moveToButtonStartFrame, cursorArrivalFrame],
+    [formTop + formOuterH + 28 * k, formTop + formOuterH + 28 * k, nextButtonCenterY - 10 * k],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
-  const clickRippleProgress = interpolate(frame, [clickFrame + 1, clickFrame + 12], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const pulseFrames = Math.max(1, Math.round(fps * 0.05));
+  const pulseHoldFrames = Math.max(1, Math.round(fps * 0.2));
+  const pulseHalfFrames = Math.max(1, Math.floor(pulseFrames / 2));
+  const buttonQuickPulse = interpolate(
+    frame,
+    [
+      cursorArrivalFrame - pulseFrames - pulseHalfFrames,
+      cursorArrivalFrame - pulseFrames,
+      cursorArrivalFrame - pulseFrames + pulseHoldFrames,
+      cursorArrivalFrame - pulseFrames + pulseHoldFrames + pulseHalfFrames,
+    ],
+    [0, 1, 1, 0],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
+  const buttonScaleBoost = buttonQuickPulse * 0.04;
+  const buttonBgColor = isFormComplete ? "#FF7A4A" : "#efb19f";
 
   return (
     <AbsoluteFill
@@ -457,6 +468,7 @@ const IntroCompanyJoinScene: React.FC<{
         fontFamily: "Inter, system-ui, sans-serif",
       }}
     >
+      <NavbarMock uiScale={k} />
       <div
         style={{
           position: "absolute",
@@ -483,7 +495,7 @@ const IntroCompanyJoinScene: React.FC<{
             border: `${1 * k}px solid #c8d1c6`,
             borderRadius: 999,
             padding: `${4 * k}px ${10 * k}px`,
-            color: "#516152",
+            color: "#1f2937",
             fontSize: 11 * k,
             fontWeight: 600,
           }}
@@ -511,7 +523,7 @@ const IntroCompanyJoinScene: React.FC<{
         >
           Företagsuppgifter
         </div>
-        <div style={{ fontSize: (tallAspect ? 12.5 : 13) * k, color: "#4f5d52", marginTop: 5 * k, lineHeight: 1.35 }}>
+        <div style={{ fontSize: (tallAspect ? 12.5 : 13) * k, color: "#1f2937", marginTop: 5 * k, lineHeight: 1.35 }}>
           Fyll i uppgifterna nedan för att gå vidare.
         </div>
 
@@ -533,7 +545,15 @@ const IntroCompanyJoinScene: React.FC<{
             background: "#d2dbcf",
           }}
         >
-          <div style={{ width: "100%", height: "100%", borderRadius: 999, background: "#c7d4c1" }} />
+          <div
+            style={{
+              width: `${formProgress * 100}%`,
+              height: "100%",
+              borderRadius: 999,
+              background: "#f97316",
+              transition: "width 220ms ease-out",
+            }}
+          />
         </div>
 
         <div style={{ marginTop: tallAspect ? 14 * k : 18 * k }}>
@@ -550,7 +570,7 @@ const IntroCompanyJoinScene: React.FC<{
               alignItems: "center",
               paddingLeft: 16 * k,
               fontSize: (tallAspect ? 16 : 18) * k,
-              color: "#1f2937",
+              color: "#111111",
             }}
           >
             {typedQuery}
@@ -571,10 +591,10 @@ const IntroCompanyJoinScene: React.FC<{
               alignItems: "center",
               paddingLeft: 16 * k,
               fontSize: (tallAspect ? 16 : 18) * k,
-              color: "#607065",
+              color: "#111111",
             }}
           >
-            559123-4567
+            {typedOrgNumber}
           </div>
         </div>
 
@@ -592,10 +612,10 @@ const IntroCompanyJoinScene: React.FC<{
               alignItems: "center",
               paddingLeft: 16 * k,
               fontSize: (tallAspect ? 16 : 18) * k,
-              color: "#607065",
+              color: "#111111",
             }}
           >
-            Anna Andersson
+            {typedContactName}
           </div>
         </div>
 
@@ -612,18 +632,15 @@ const IntroCompanyJoinScene: React.FC<{
               width: buttonWidth,
               height: buttonHeight,
               borderRadius: 12 * k,
-              background: "#efb19f",
+              background: buttonBgColor,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#f8ede9",
+              color: "#ffffff",
               fontSize: (tallAspect ? 16 : 18) * k,
               fontWeight: 700,
-              transform: `scale(${1 - 0.08 * clickPressProgress})`,
-              boxShadow:
-                clickPressProgress > 0
-                  ? "0 3px 8px rgba(201,120,92,0.32), inset 0 0 0 2px rgba(255,255,255,0.25)"
-                  : "0 6px 14px rgba(201,120,92,0.24)",
+              transform: `scale(${1 + buttonScaleBoost})`,
+              boxShadow: "0 6px 14px rgba(201,120,92,0.24)",
             }}
           >
             Registrera
@@ -639,7 +656,7 @@ const IntroCompanyJoinScene: React.FC<{
           width: 28 * k,
           height: 38 * k,
           zIndex: 20,
-          transform: `scale(${1 + 0.12 * clickPressProgress})`,
+          transform: "scale(1)",
           filter: "drop-shadow(0 3px 8px rgba(15,23,42,0.3))",
         }}
       >
@@ -656,13 +673,13 @@ const IntroCompanyJoinScene: React.FC<{
       <div
         style={{
           position: "absolute",
-          left: cursorX + 8 * k - (28 * k * clickRippleProgress) / 2,
-          top: cursorY + 18 * k - (28 * k * clickRippleProgress) / 2,
-          width: 28 * k * clickRippleProgress,
-          height: 28 * k * clickRippleProgress,
+          left: cursorX + 8 * k,
+          top: cursorY + 18 * k,
+          width: 0,
+          height: 0,
           borderRadius: 999,
-          border: `${2 * k}px solid rgba(17,24,39,${0.35 * (1 - clickRippleProgress)})`,
-          opacity: clickPressProgress > 0 ? 1 : Math.max(0, 1 - clickRippleProgress),
+          border: "0 solid transparent",
+          opacity: 0,
           pointerEvents: "none",
           zIndex: 19,
         }}
@@ -673,15 +690,29 @@ const IntroCompanyJoinScene: React.FC<{
 
 const StaticScene: React.FC<{
   frameOffset?: number;
+  startDelayFrames?: number;
+  contentStartOffsetYPx?: number;
+  compactContentLayer?: boolean;
+  showNavbar?: boolean;
   layoutWidth?: number;
   layoutHeight?: number;
   /** Fixed timeline frame for still previews. Omit to play the full timeline. */
   lockedFrame?: number;
   /** When embedded in a shorter `Sequence`, pass its length so scroll/land timing fits the clip. */
   clipDurationInFrames?: number;
-}> = ({ frameOffset = 0, layoutWidth, layoutHeight, lockedFrame, clipDurationInFrames }) => {
+}> = ({
+  frameOffset = 0,
+  startDelayFrames = 0,
+  contentStartOffsetYPx = 90,
+  compactContentLayer = false,
+  showNavbar = true,
+  layoutWidth,
+  layoutHeight,
+  lockedFrame,
+  clipDurationInFrames,
+}) => {
   const sourceFrame = useCurrentFrame();
-  const timelineFrame = lockedFrame ?? Math.max(0, sourceFrame - frameOffset);
+  const timelineFrame = lockedFrame ?? Math.max(0, sourceFrame - frameOffset - startDelayFrames);
   const frame = timelineFrame;
   const { width: cw, height: ch, durationInFrames, fps } = useVideoConfig();
   const width = layoutWidth ?? cw;
@@ -703,6 +734,7 @@ const StaticScene: React.FC<{
   const firstY = resultsY + 120 * k + cardHpx / 2;
   const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length;
   const contentHeight = lastCardBottom + 60 * k;
+  const movingLayerHeight = compactContentLayer ? height : contentHeight;
   const scrollDistance = Math.max(0, contentHeight - height);
 
   const introStillFrames = 12;
@@ -823,6 +855,7 @@ const StaticScene: React.FC<{
     (Math.sin(frame * 1.75) * 0.7 + Math.sin(frame * 3.2 + 0.8) * 0.3) * shakeAmplitude * shakeIntensity;
   const sceneShakeY =
     (Math.cos(frame * 1.95 + 1.1) * 0.65 + Math.sin(frame * 2.8 + 0.4) * 0.35) * shakeAmplitude * shakeIntensity;
+  const contentStartOffsetY = contentStartOffsetYPx * k;
 
   return (
     <AbsoluteFill
@@ -846,8 +879,8 @@ const StaticScene: React.FC<{
           top: 0,
           left: 0,
           width: "100%",
-          height: contentHeight,
-          transform: `translate(${sceneShakeX}px, ${scrollY + sceneShakeY}px)`,
+          height: movingLayerHeight,
+          transform: `translate(${sceneShakeX}px, ${scrollY + sceneShakeY + contentStartOffsetY}px)`,
           willChange: "transform",
         }}
       >
@@ -1041,7 +1074,7 @@ const StaticScene: React.FC<{
         </div>
       </div>
 
-      <NavbarMock uiScale={k} />
+      {showNavbar ? <NavbarMock uiScale={k} /> : null}
     </AbsoluteFill>
   );
 };
@@ -1051,23 +1084,40 @@ const ScaledPremiumStaticScene: React.FC<{
   panelWidth: number;
   panelHeight: number;
   segmentFrames: number;
-}> = ({ panelWidth, panelHeight, segmentFrames }) => {
+  startDelayFrames?: number;
+  contentStartOffsetYPx?: number;
+}> = ({
+  panelWidth,
+  panelHeight,
+  segmentFrames,
+  startDelayFrames = 0,
+  contentStartOffsetYPx = 90,
+}) => {
   const { width: cw, height: ch } = useVideoConfig();
-  const scale = panelWidth / cw;
+  const widthScale = panelWidth / cw;
+  const heightScale = panelHeight / ch;
+  const scale = Math.min(widthScale, heightScale) * 0.9;
+  const scaledHeight = ch * scale;
+  const topOffset = Math.max(0, (panelHeight - scaledHeight) / 2);
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#ffffff" }}>
       <div
         style={{
           position: "absolute",
           left: "50%",
-          top: 0,
+          top: topOffset,
           width: cw,
           height: ch,
           transform: `translateX(-50%) scale(${scale})`,
           transformOrigin: "top center",
         }}
       >
-        <StaticScene clipDurationInFrames={segmentFrames} />
+        <StaticScene
+          clipDurationInFrames={segmentFrames}
+          startDelayFrames={startDelayFrames}
+          contentStartOffsetYPx={contentStartOffsetYPx}
+          compactContentLayer
+        />
       </div>
     </div>
   );
@@ -1081,14 +1131,18 @@ const ScaledHanellGoogleVideo: React.FC<{
   panelWidth: number;
   panelHeight: number;
 }> = ({ panelWidth, panelHeight }) => {
-  const scale = panelWidth / HANELL_DESIGN_W;
+  const widthScale = panelWidth / HANELL_DESIGN_W;
+  const heightScale = panelHeight / HANELL_DESIGN_H;
+  const scale = Math.min(widthScale, heightScale);
+  const scaledHeight = HANELL_DESIGN_H * scale;
+  const topOffset = Math.max(0, (panelHeight - scaledHeight) / 2);
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#ffffff" }}>
       <div
         style={{
           position: "absolute",
           left: "50%",
-          top: 0,
+          top: topOffset,
           width: HANELL_DESIGN_W,
           height: HANELL_DESIGN_H,
           transform: `translateX(-50%) scale(${scale})`,
@@ -1103,10 +1157,10 @@ const ScaledHanellGoogleVideo: React.FC<{
 
 const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentFrames }) => {
   const { width, height } = useVideoConfig();
-  const stackGap = 20;
+  const stackGap = 0;
   const panelWidth = width;
   const panelHeight = height;
-  const rightSlotH = (panelHeight - stackGap) / 2;
+  const rowHeight = (panelHeight - stackGap) / 2;
 
   return (
     <AbsoluteFill
@@ -1134,21 +1188,24 @@ const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentF
             height: panelHeight,
             position: "relative",
             background: "#ffffff",
-            display: "flex",
-            flexDirection: "column",
+            display: "grid",
+            gridTemplateColumns: "1fr",
+            gridTemplateRows: "1fr 1fr",
             gap: stackGap,
             boxSizing: "border-box",
           }}
         >
-          <div style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden" }}>
+          <div style={{ position: "relative", minHeight: 0, overflow: "hidden" }}>
             <ScaledPremiumStaticScene
               panelWidth={panelWidth}
-              panelHeight={rightSlotH}
+              panelHeight={rowHeight}
               segmentFrames={segmentFrames}
+              startDelayFrames={18}
+              contentStartOffsetYPx={220}
             />
           </div>
-          <div style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden" }}>
-            <ScaledHanellGoogleVideo panelWidth={panelWidth} panelHeight={rightSlotH} />
+          <div style={{ position: "relative", minHeight: 0, overflow: "hidden" }}>
+            <ScaledHanellGoogleVideo panelWidth={panelWidth} panelHeight={rowHeight} />
           </div>
         </div>
       </div>
@@ -1162,7 +1219,7 @@ const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentF
  */
 export const HantverkskollenSearchJourney: React.FC = () => {
   const { fps } = useVideoConfig();
-  const introFrames = Math.round(fps * 2.3);
+  const introFrames = getFormSubmitClickFrame(fps);
   /** Long enough for full StaticScene (pop → scroll → land ≈ 4.7s @ 60fps) plus a short hold. */
   const splitFrames = Math.round(fps * 6);
   return (
@@ -1181,7 +1238,7 @@ export const HantverkskollenAnimation: React.FC = () => <HantverkskollenWithIntr
 const HantverkskollenWithIntro: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const introFrames = Math.round(fps * 2.3);
+  const introFrames = getFormSubmitClickFrame(fps);
   const transitionFrames = Math.round(fps * 0.35);
   const introOpacity = interpolate(frame, [introFrames - transitionFrames, introFrames], [1, 0], {
     extrapolateLeft: "clamp",
