@@ -356,6 +356,9 @@ function estimateRowScrollHeight(title: string): number {
 const RESULTS_SCROLL_HEIGHT_PX =
   RESULTS.reduce((sum, r) => sum + estimateRowScrollHeight(r.title), 0) * GOOGLE_RESULT_ROW_SCALE;
 
+/** Längd på scroll-rörelsen i bildrutor — lägre värde = snabbare (tidigare 250). */
+const GOOGLE_SCROLL_ANIMATION_FRAMES = 150;
+
 const TABS = ["All", "Images", "Videos", "News", "Short videos", "Web", "More"];
 
 const GOOGLE_PAGINATION_HEIGHT_PX = 460;
@@ -459,7 +462,10 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
   layoutHeight,
 }) => {
   const frame = useCurrentFrame();
-  const { width: cw, height: ch } = useVideoConfig();
+  const { width: cw, height: ch, fps } = useVideoConfig();
+  /** Vänta 2,5 s innan resultatlistan scrollar uppåt. */
+  const googleScrollDelayFrames = Math.round(fps * 2.5);
+  const scrollFrame = frame - googleScrollDelayFrames;
   const width = layoutWidth ?? cw;
   const height = layoutHeight ?? ch;
   const k = width / 1920;
@@ -483,7 +489,7 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
   const scrollMax = Math.max(0, Math.floor(rawMax * 0.985));
 
   // Börjar längst ned i listan, animerar uppåt mot sökfältet (translateY går mot 0).
-  const moveY = interpolate(frame, [0, 250], [-scrollMax, 0], {
+  const moveY = interpolate(scrollFrame, [0, GOOGLE_SCROLL_ANIMATION_FRAMES], [-scrollMax, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.33, 0, 0.2, 1),

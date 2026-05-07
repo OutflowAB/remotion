@@ -17,7 +17,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="HanellGoogleVideo"
         component={HanellGoogleVideo}
-        durationInFrames={300}
+        durationInFrames={330}
         fps={30}
         width={960}
         height={540}
@@ -25,7 +25,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="HantverkskollenSearchJourney"
         component={HantverkskollenSearchJourney}
-        durationInFrames={498}
+        durationInFrames={650}
         fps={60}
         width={2520}
         height={2831}

@@ -1174,55 +1174,59 @@ const ScaledHanellGoogleVideo: React.FC<{
   );
 };
 
+const SPLIT_SCENE_PAD_PX = 12;
+const SPLIT_SCENE_ROW_GAP_PX = 10;
+
+const splitPanelBoxStyle: React.CSSProperties = {
+  minWidth: 0,
+  minHeight: 0,
+  position: "relative",
+  overflow: "hidden",
+  borderRadius: 14,
+  background: "#ffffff",
+  boxShadow: "0 4px 24px rgba(15, 23, 42, 0.08)",
+  border: "1px solid rgba(15, 23, 42, 0.06)",
+  boxSizing: "border-box",
+};
+
 const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentFrames }) => {
   const { width, height } = useVideoConfig();
-  const panelWidth = width;
-  const panelHeight = height;
-  const rowHeight = panelHeight / 2;
+  const innerW = width - SPLIT_SCENE_PAD_PX * 2;
+  const innerH = height - SPLIT_SCENE_PAD_PX * 2;
+  const rowHeight = (innerH - SPLIT_SCENE_ROW_GAP_PX) / 2;
 
   return (
     <AbsoluteFill
       style={{
         background: "linear-gradient(165deg, #f1f5f9 0%, #dde8d4 45%, #cbd5e1 100%)",
         fontFamily: "Inter, system-ui, sans-serif",
+        padding: SPLIT_SCENE_PAD_PX,
+        boxSizing: "border-box",
       }}
     >
       <div
         style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "stretch",
-          justifyContent: "center",
+          display: "grid",
+          gridTemplateColumns: "1fr",
+          gridTemplateRows: "1fr 1fr",
+          columnGap: 0,
+          rowGap: SPLIT_SCENE_ROW_GAP_PX,
           width: "100%",
           height: "100%",
           boxSizing: "border-box",
         }}
       >
-        <div
-          style={{
-            overflow: "hidden",
-            flexShrink: 0,
-            width: panelWidth,
-            height: panelHeight,
-            position: "relative",
-            background: "#ffffff",
-            display: "flex",
-            flexDirection: "column",
-            boxSizing: "border-box",
-          }}
-        >
-          <div style={{ flex: "1 1 0%", minHeight: 0, position: "relative", overflow: "hidden" }}>
-            <ScaledPremiumStaticScene
-              panelWidth={panelWidth}
-              panelHeight={rowHeight}
-              segmentFrames={segmentFrames}
-              startDelayFrames={18}
-              contentStartOffsetYPx={44}
-            />
-          </div>
-          <div style={{ flex: "1 1 0%", minHeight: 0, position: "relative", overflow: "hidden" }}>
-            <ScaledHanellGoogleVideo panelWidth={panelWidth} panelHeight={rowHeight} />
-          </div>
+        <div style={splitPanelBoxStyle}>
+          <ScaledPremiumStaticScene
+            panelWidth={innerW}
+            panelHeight={rowHeight}
+            segmentFrames={segmentFrames}
+            startDelayFrames={18}
+            contentStartOffsetYPx={44}
+          />
+        </div>
+        <div style={splitPanelBoxStyle}>
+          <ScaledHanellGoogleVideo panelWidth={innerW} panelHeight={rowHeight} />
         </div>
       </div>
     </AbsoluteFill>
@@ -1231,13 +1235,13 @@ const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentF
 
 /**
  * 1) Full-screen: type company name + click “Registrera”.
- * 2) Premium-lista ovanför och Hanell Google under, kant mot kant (100 % bredd).
+ * 2) Premium-lista och Hanell Google i två rader (grid 2×1), var sin panel.
  */
 export const HantverkskollenSearchJourney: React.FC = () => {
   const { fps } = useVideoConfig();
   const introFrames = getFormSubmitClickFrame(fps);
-  /** Long enough for full StaticScene (pop → scroll → land ≈ 4.7s @ 60fps) plus a short hold. */
-  const splitFrames = Math.round(fps * 6);
+  /** StaticScene + hold; +2,5 s på Google-panelen innan scroll (se HanellGoogleVideo). */
+  const splitFrames = Math.round(fps * 8.5);
   return (
     <AbsoluteFill style={{ background: "#0f172a" }}>
       <Sequence durationInFrames={introFrames}>
