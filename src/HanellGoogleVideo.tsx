@@ -9,21 +9,28 @@ const LINK = "#1a0dab";
 const BORDER = "#dadce0";
 
 type ResultRowProps = {
+  /** Composition scale for horizontal inset (matches HanellGoogleVideo `k`). */
+  k: number;
   title: string;
   urlPath: string;
+  /** Extra breadcrumb-style line under `urlPath` (common in live Google SERPs). */
+  urlSubline?: string;
   source: string;
   snippet: string;
   iconSeed: number;
 };
 
 const ResultRow: React.FC<ResultRowProps> = ({
+  k,
   title,
   urlPath,
+  urlSubline,
   source,
   snippet,
   iconSeed,
 }) => {
   const u = GOOGLE_RESULT_ROW_SCALE;
+  const padX = 128 * k;
   const iconPalettes = [
     ["#fbbc04", "#ea4335"],
     ["#34a853", "#4285f4"],
@@ -41,6 +48,9 @@ const ResultRow: React.FC<ResultRowProps> = ({
     <div
       style={{
         marginBottom: 22 * u,
+        paddingLeft: padX,
+        paddingRight: padX,
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -85,6 +95,20 @@ const ResultRow: React.FC<ResultRowProps> = ({
           >
             {urlPath}
           </div>
+          {urlSubline ? (
+            <div
+              style={{
+                fontSize: 12 * u,
+                color: MUTED,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                marginTop: 2 * u,
+              }}
+            >
+              {urlSubline}
+            </div>
+          ) : null}
         </div>
       </div>
       <a
@@ -127,10 +151,11 @@ const GoogleMark: React.FC<{ size?: number }> = ({ size = 92 }) => (
 /** Proportional size increase for each result block (same layout ratios). */
 const GOOGLE_RESULT_ROW_SCALE = 1.12;
 
-const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
+const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
   {
     title: "Hanell Vvs Konsult - Rörmokare i nykoping",
     urlPath: "https://www.hantverkskollen.se › ... › hanell-vvs-konsult",
+    urlSubline: "… › katalog › verksam › nyköping",
     source: "Hantverkskollen",
     snippet:
       "Hanell Vvs Konsult utför uppdrag i Nyköping och närliggande områden. Från vår bas på 611 22 Nyköping når vi dig snabbt. En professionell hantverkare med …",
@@ -138,20 +163,15 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Anders Rune Hanell",
     urlPath: "https://krafman.se › engagemang",
+    urlSubline: "… › personregister › styrelseuppdrag",
     source: "Krafman",
     snippet:
       "Hanell, Anders Rune är en man född den 24 februari 1963. Han är verksam i de företag och/eller föreningar som anges nedan.",
   },
   {
-    title: "Hitta företag som erbjuder de produkter eller tjänster du söker",
-    urlPath: "https://www.industritorget.se › väg › ...",
-    source: "Industritorget.se",
-    snippet:
-      "Företagsregister där du kan söka bland företag som säljer de produkter eller tillhandahåller de tjänster du efterfrågar.",
-  },
-  {
     title: "Anbud",
     urlPath: "https://app.pabliq.se › procurements › ...",
+    urlSubline: "… › anbud › upphandling",
     source: "Pabliq",
     snippet:
       "EVK – Energi & VVS Konsult AB. Tekniska konsulter inom bygg. Sigma … amanda.hanell@ecenea.se. Dunderbergsgatan 2, 382 80 Nybro. Bransch. Region …",
@@ -159,20 +179,15 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Hanell Consulting AB - Org.nr 559318-8898 - Sköndal",
     urlPath: "https://www.allabolag.se › sköndal › ...",
+    urlSubline: "… › bokslut › nyckeltal",
     source: "Allabolag",
     snippet:
       "Företaget erbjuder konsultstöd och expertis inom utveckling av individ, grupp, ledarskap och företagskultur med syfte att utveckla kundens effektivitet …",
   },
   {
-    title: "Partners",
-    urlPath: "https://www.parter.se › sponsors",
-    source: "Parter.se",
-    snippet:
-      "Partners hos Parter.se. Här hittar du samtliga partners som är aktiva hos oss och kan söka fram rätt leverantör direkt.",
-  },
-  {
     title: "Hanell Entreprenad – Hanell Entreprenad AB",
     urlPath: "https://www.hanelle.se",
+    urlSubline: "/om-oss › järnväg › säkerhetskrav",
     source: "Hanell Entreprenad",
     snippet:
       "Vi är ett nytänkande företag som utför byggnationer och underhåll inom järnvägssektorn. Säkerhet är grundläggande i verksamheten.",
@@ -180,6 +195,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Bästa Tillväxt 2025 - Gävle kommun",
     urlPath: "https://upplysningar.syna.se › gavle-kommun-2180",
+    urlSubline: "… › rankning › snabbväxande",
     source: "AB Syna",
     snippet:
       "Hanell Entreprenad i Gävle AB finns med i listan tillsammans med andra lokala bolag. Offentliga uppgifter och bolagsdata.",
@@ -187,6 +203,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Hanell Consulting AB - Katalanvägen 4 i Stockholm",
     urlPath: "https://www.hitta.se › verksamhet",
+    urlSubline: "… › orgnr › befattningshavare",
     source: "Hitta.se",
     snippet:
       "Hanell Consulting AB är verksam inom konsultverksamhet avseende företagsorganisation och hade 1 anställd under senaste redovisade året.",
@@ -194,6 +211,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Hanell VVS & Konsult | Nyköping – ledningar, värme, sanitet",
     urlPath: "https://www.google.com › maps › place",
+    urlSubline: "… › omdömen › öppettider",
     source: "Google Maps",
     snippet:
       "Öppettider, omdömen och vägbeskrivning. Kontrollera telefon och adress innan du bokar. Uppdaterade uppgifter om rörmokare och VVS i Nyköping.",
@@ -201,6 +219,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Rune Hanell – roller och uppdrag | LinkedIn",
     urlPath: "https://www.linkedin.com › in › ...",
+    urlSubline: "… › aktivitet › kontakter",
     source: "LinkedIn",
     snippet:
       "Erfarenhet inom teknik, projekt och rådgivning. Se kontakter, kurser och tidigare arbetsgivare i profilen som matchar din sökning.",
@@ -208,6 +227,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Hanell Entreprenad AB | Företagsinfo & nyckeltal",
     urlPath: "https://www.proff.se › företag › hanell-entreprenad-ab",
+    urlSubline: "… › styrelse › anställda",
     source: "Proff.se",
     snippet:
       "Omsättning, resultat och styrelse. Jämför liknande bolag i Gävleborgs län. Hämta årsredovisningar och officiella poster.",
@@ -215,6 +235,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Rörinstallation & VVS – offert och prisjämförelse",
     urlPath: "https://www.servicefinder.se › vvs › närke",
+    urlSubline: "… › jämför › offert",
     source: "Servicefinder",
     snippet:
       "Få offerter från certifierade rörmokare. Ange postort och typ av jobb – badrum, värmepump, stambyte. Gratis och utan köpkrav.",
@@ -222,6 +243,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Anders Rune Hanell – adress, telefon, ålder",
     urlPath: "https://www.merinfo.se › person › ...",
+    urlSubline: "… › företagsengagemang › historik",
     source: "Merinfo",
     snippet:
       "Allmänna uppgifter från offentliga källor. Se företagsengagemang och historik där sådana uppgifter finns tillgängliga.",
@@ -229,6 +251,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Hanell Consulting AB | Bolagsordning och firmateckning",
     urlPath: "https://bolagsverket.se › ... › verksamt",
+    urlSubline: "… › firmateckning › styrelse",
     source: "Bolagsverket / Verksamt",
     snippet:
       "Registreringsdatum, säte och bolagsform. Styrelse och revisorer enligt senaste inlämnade handlingar.",
@@ -236,34 +259,15 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "VVS-installatörer nära dig – kvalitetssäkrade hantverkare",
     urlPath: "https://www.vvsforum.se › artikel › ...",
+    urlSubline: "… › checklista › certifikat",
     source: "VVS Forum",
     snippet:
       "Branschguide med checklista för beställaren: certifikat, ROT-avdrag, säker arbetsmiljö och garanti på täta stamnät och rörinstallation.",
   },
   {
-    title: "Gävle kommun – leverantörslista och avtal",
-    urlPath: "https://www.gavle.se › kommun › affär › ...",
-    source: "Gävle kommun",
-    snippet:
-      "Här publiceras ramavtal och entreprenörer som får utföra arbeten enligde kommunens upphandlingsvillkor. Sök leverantör eller bransch.",
-  },
-  {
-    title: "Hanell Consulting AB – skatt och deklaration",
-    urlPath: "https://www.skatteverket.se › företag › ...",
-    source: "Skatteverket",
-    snippet:
-      "Generell information om F-skatt, moms och arbetsgivaravgifter för aktiebolag. Lokala blanketten hittas via Mina sidor.",
-  },
-  {
-    title: "Konsulter inom infrastruktur och banunderhåll",
-    urlPath: "https://www.trafikverket.se › anbud › ram-avtal",
-    source: "Trafikverket",
-    snippet:
-      "Upphandlingar och tekniska krav för underhåll av järnväg. Säkerhetsklassning och projektörskrav för entreprenörer.",
-  },
-  {
     title: "Recension: jour mot läckage i kylar/skölj - VVS Nyköping",
     urlPath: "https://www.reco.se › rörmokare › nyköping",
+    urlSubline: "… › omdömen › jämför",
     source: "Reco.se",
     snippet:
       "Verifierade kundomdömen. Snittbetyg, svarstid på akutjour och prisnivå. Jämför upp till fem företag i samma kategori.",
@@ -271,6 +275,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Bolagsstämma och ägarstruktur – aktiebolag Stockholm",
     urlPath: "https://www.uc.se › bolagsinformation › ...",
+    urlSubline: "… › ägare › koncern",
     source: "UC",
     snippet:
       "Kreditrating, betalningsanmärkningar och nyckeltal. Översikt över koncern och närstående bolag när sådana finns registrerade.",
@@ -278,20 +283,15 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Installatörsföretagen – auktoriserade VVS-företag",
     urlPath: "https://www.if.se › sök › auktoriserad",
+    urlSubline: "… › legitimation › garanti",
     source: "Installatörsföretagen",
     snippet:
       "Hitta auktoriserat företag med yrkeslegitimation. Säker VVS-installation enligt branschregler och Elsäkerhetsverkets råd.",
   },
   {
-    title: "Bygg och anläggning – underleverantörer och entreprenad",
-    urlPath: "https://www.byggfakta.se › projekt › ...",
-    source: "Byggfakta",
-    snippet:
-      "Projektregister med tidplan, huvudentreprenör och inblandade parter. Sök på ort eller projekttyp.",
-  },
-  {
     title: "Nyköpings-Tidningen – lokala företag i fokus",
     urlPath: "https://www.nt.se › näringsliv › ...",
+    urlSubline: "… › företag › reportage",
     source: "NT.se",
     snippet:
       "Reportage om regionala satsningar och entreprenörer. Intervjuer med branschprofiler och listor över nystartade bolag.",
@@ -299,15 +299,32 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
   {
     title: "Hanell – träffar på efternamn och adress",
     urlPath: "https://www.ratsit.se › person › ...",
+    urlSubline: "… › register › allmän handling",
     source: "Ratsit",
     snippet:
       "Personinfo och eventuella företagskopplingar. Uppgifterna hämtas från allmänt tillgängliga register enligt gällande lag.",
+  },
+  {
+    title: "Bolagsinformation och ekonomi – Hanell nära din sökning",
+    urlPath: "https://www.fortnox.se › foretag › sok › ...",
+    urlSubline: "… › registret › nyckeltal",
+    source: "Fortnox",
+    snippet:
+      "Sök bland svenska företag med uppdaterade uppgifter från officiella register. Se omsättning, bolagsform, adress och bokslutsöversikt för liknande namn och org.nr.",
+  },
+  {
+    title: "Hanell Vvs Konsult – org.nr och branschdata | Allabolag",
+    urlPath: "https://www.allabolag.se › nyköping › ... › hanell-vvs-konsult",
+    urlSubline: "… › bokslut › anställda",
+    source: "Allabolag",
+    snippet:
+      "Se säte, omsättning, verksamhetsbeskrivning och styrelse. Utförlig rapport med jämförbara bolag och historik från senaste årsredovisningar.",
   },
 ];
 
 /** Halverar inte marginal under sista raden i scroll-mått (padding i kolumnen räknas inte som innehåll). */
 const ROW_MARGIN = 22;
-const HEADER_BLOCK_PX = 40;
+const HEADER_BLOCK_PX = 56;
 const SNIPPET_PX = 44;
 
 /** ~720px bred titel, 20px — färre rader i modellen = lägre scrollMax = aldrig “genom” slutet. */
@@ -322,6 +339,96 @@ const RESULTS_SCROLL_HEIGHT_PX =
   RESULTS.reduce((sum, r) => sum + estimateRowScrollHeight(r.title), 0) * GOOGLE_RESULT_ROW_SCALE;
 
 const TABS = ["All", "Images", "Videos", "News", "Short videos", "Web", "More"];
+
+const GOOGLE_PAGINATION_HEIGHT_PX = 460;
+
+const GoogleResultPagination: React.FC<{ k: number }> = ({ k }) => {
+  const s = k * GOOGLE_RESULT_ROW_SCALE * 2.1;
+  const googleLetterStyle: React.CSSProperties = {
+    fontFamily: "Arial, Helvetica, sans-serif",
+    fontSize: 34 * s,
+    fontWeight: 500,
+    lineHeight: `${36 * s}px`,
+    letterSpacing: -1.5 * s,
+  };
+  const pageNumberStyle: React.CSSProperties = {
+    fontSize: 13 * s,
+    lineHeight: `${16 * s}px`,
+    fontFamily: "Arial, Helvetica, sans-serif",
+  };
+  const pageCellStyle: React.CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    minWidth: 18 * s,
+  };
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        boxSizing: "border-box",
+        padding: `${18 * s}px ${128 * k}px ${36 * s}px`,
+        marginBottom: 222 * s,
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 1.2 * s,
+          fontFamily: "Arial, Helvetica, sans-serif",
+        }}
+      >
+        <span style={{ ...googleLetterStyle, color: "#4285f4" }}>G</span>
+        <div style={pageCellStyle}>
+          <span style={{ ...googleLetterStyle, color: "#ea4335" }}>o</span>
+          <span style={{ ...pageNumberStyle, color: TEXT }}>1</span>
+        </div>
+        {Array.from({ length: 9 }, (_, index) => {
+          const page = index + 2;
+          return (
+            <div key={page} style={pageCellStyle}>
+              <span style={{ ...googleLetterStyle, color: "#fbbc04" }}>o</span>
+              <span style={{ ...pageNumberStyle, color: LINK }}>{page}</span>
+            </div>
+          );
+        })}
+        <a
+          href="#"
+          aria-label="Next page"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            color: LINK,
+            textDecoration: "none",
+            marginLeft: 0,
+          }}
+        >
+          <span aria-hidden style={{ display: "flex", alignItems: "baseline" }}>
+            <span style={{ ...googleLetterStyle, color: "#4285f4" }}>g</span>
+            <span style={{ ...googleLetterStyle, color: "#34a853" }}>l</span>
+            <span style={{ ...googleLetterStyle, color: "#ea4335" }}>e</span>
+            <span
+              style={{
+                color: LINK,
+                fontSize: 22 * s,
+                lineHeight: `${26 * s}px`,
+                marginLeft: 7 * s,
+              }}
+            >
+              ›
+            </span>
+          </span>
+          <span style={{ ...pageNumberStyle, marginLeft: 30 * s }}>Next</span>
+        </a>
+      </div>
+    </div>
+  );
+};
 
 type HanellGoogleVideoProps = {
   /** When embedded in a smaller panel, pass the design size so layout matches (defaults to composition size). */
@@ -342,10 +449,15 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
   const contentTop = 72 * k + 58 * k + 58 * k;
   const mainColumnHeader =
     20 * k + (14 * k + 12 * k) + 20 * k + 18 * k;
+  const paginationHeight = GOOGLE_PAGINATION_HEIGHT_PX * k * GOOGLE_RESULT_ROW_SCALE;
 
-  // Sluta där sista träffen slutar — räkna INTE `padding-bottom` på huvudkolumnen (skulle ge vitt under sista länken).
-  const totalScrollHeight = contentTop + mainColumnHeader + RESULTS_SCROLL_HEIGHT_PX;
-  const rawMax = totalScrollHeight - height;
+  /** Search chrome is sticky; result rows and pagination scroll underneath it. */
+  const totalScrollHeight =
+    mainColumnHeader +
+    RESULTS_SCROLL_HEIGHT_PX +
+    paginationHeight;
+
+  const rawMax = totalScrollHeight - (height - contentTop);
   // Liten marginal så vi aldrig överskattar höjden (undvik vit ruta under sista träff).
   const scrollMax = Math.max(0, Math.floor(rawMax * 0.985));
 
@@ -368,14 +480,17 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
       <div
         style={{
           position: "absolute",
-          inset: 0,
-          transform: `translateY(${moveY}px)`,
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 3,
+          background: BG,
         }}
       >
         {/* Top search row */}
         <div
           style={{
-            padding: `${18 * k}px ${28 * k}px ${12 * k}px`,
+            padding: `${18 * k}px 0px ${12 * k}px ${28 * k}px`,
             display: "flex",
             alignItems: "center",
             gap: 24 * k,
@@ -419,6 +534,7 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
               height: 36 * k,
               borderRadius: "50%",
               background: `linear-gradient(135deg, #5b8cff, #2dd4bf)`,
+              marginLeft: "auto",
               flexShrink: 0,
             }}
           />
@@ -454,11 +570,22 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
             );
           })}
         </div>
+      </div>
 
+      <div
+        style={{
+          position: "absolute",
+          top: contentTop,
+          left: 0,
+          right: 0,
+          transform: `translateY(${moveY}px)`,
+          zIndex: 1,
+        }}
+      >
         {/* Main column — narrow side inset so rows reach almost to the frame edge */}
         <div
           style={{
-            padding: `${22 * k}px ${14 * k}px ${52 * k}px`,
+            padding: `${22 * k}px ${14 * k}px ${12 * k}px`,
           }}
         >
           <div
@@ -495,10 +622,12 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
           {RESULTS.map((r, index) => (
             <ResultRow
               key={`${index}-${r.urlPath}`}
+              k={k}
               {...r}
               iconSeed={Math.floor((index * 17 + 11) % 97)}
             />
           ))}
+          <GoogleResultPagination k={k} />
         </div>
       </div>
     </AbsoluteFill>

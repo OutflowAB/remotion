@@ -20,7 +20,6 @@ import {
   Menu,
   FileText,
   Phone,
-  Search,
 } from "lucide-react";
 import { HanellGoogleVideo } from "./HanellGoogleVideo";
 
@@ -95,6 +94,11 @@ const HantverkskollenLogo: React.FC<{ width: number; height: number }> = ({ widt
   );
 };
 
+/** Design height for `NavbarMock` (px before `uiScale`); även start-offset för lista under baren i `StaticScene`. */
+const NAVBAR_BAR_HEIGHT_DESIGN_PX = 104;
+/** Same factor as `IntroCompanyJoinScene` (`width / 900`) so the navbar matches the first scene everywhere. */
+const NAVBAR_UI_SCALE_DIVISOR = 900;
+
 const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
   return (
     <div
@@ -103,14 +107,13 @@ const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
         top: 0,
         left: 0,
         width: "100%",
-        height: 88 * uiScale,
+        height: NAVBAR_BAR_HEIGHT_DESIGN_PX * uiScale,
         display: "flex",
         justifyContent: "center",
         background: "rgba(255, 255, 255, 0.4)",
         backdropFilter: "blur(30px) saturate(200%)",
         WebkitBackdropFilter: "blur(30px) saturate(200%)",
         borderBottom: "0.5px solid rgba(0, 0, 0, 0.08)",
-        boxShadow: "0 1px 0 0 rgba(0,0,0,0.03), 0 1px 2px 0 rgba(0,0,0,0.05)",
         zIndex: 10,
       }}
     >
@@ -133,7 +136,7 @@ const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: 38 * uiScale,
+              height: 46 * uiScale,
               borderRadius: 14 * uiScale,
               paddingLeft: 16 * uiScale,
               paddingRight: 16 * uiScale,
@@ -141,7 +144,6 @@ const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
               fontWeight: 700,
               color: "#ffffff",
               backgroundColor: "#FF7A4A",
-              boxShadow: "0 8px 20px rgba(255, 122, 74, 0.28)",
               gap: 8 * uiScale,
             }}
           >
@@ -153,11 +155,9 @@ const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 40 * uiScale,
-              height: 40 * uiScale,
+              width: 46 * uiScale,
+              height: 46 * uiScale,
               color: "#334630",
-              borderRadius: 10 * uiScale,
-              background: "rgba(51, 70, 48, 0.05)",
             }}
           >
             <Menu size={25 * uiScale} strokeWidth={2.2} />
@@ -410,7 +410,7 @@ const IntroCompanyJoinScene: React.FC<{
   const { width: cw, height: ch, fps } = useVideoConfig();
   const width = layoutWidth ?? cw;
   const height = layoutHeight ?? ch;
-  const k = width / 900;
+  const k = width / NAVBAR_UI_SCALE_DIVISOR;
   /** Tall canvas (t.ex. 2520×2831): smalare kort centrerat; bred 16∶9: som tidigare. */
   const tallAspect = height / width >= 1.02;
   const formWidth = tallAspect ? Math.min(width, 1450) : width;
@@ -765,6 +765,7 @@ const StaticScene: React.FC<{
   /** Tall canvas (e.g. 2520×2831): redesign positioning so content fills the frame; wide 16∶9: keep original look. */
   const tallAspect = height / width >= 1.02;
   const k = width / 1280;
+  const navbarUiScale = width / NAVBAR_UI_SCALE_DIVISOR;
   const resultsMargin = tallAspect ? 60 * k : 96 * k;
   const resultsX = resultsMargin;
   const resultsW = width - resultsMargin * 2;
@@ -776,17 +777,15 @@ const StaticScene: React.FC<{
   const cardHpx = cardWpx * cardAspect;
   const cardUiScale = cardWpx / 720;
   const rowGap = cardHpx + (tallAspect ? 22 : 14) * k;
-  /** Header section + filter bar above the card list. */
-  const headerTop = tallAspect ? 70 * k : 100 * k;
-  const headerHeight = tallAspect ? 250 * k : 0;
-  const searchTop = tallAspect ? headerTop + headerHeight - 30 * k : 208 * k;
-  const searchHeight = tallAspect ? 76 * k : 50 * k;
-  const resultsY = tallAspect ? searchTop + searchHeight + 40 * k : 290 * k;
-  const resultsHeaderH = tallAspect ? 150 * k : 120 * k;
+  /** Toppmarginal sedan hjälte och sökfält saknas; undvik överdrag under `NavbarMock` när den visas. */
+  const navbarInsetY = showNavbar ? NAVBAR_BAR_HEIGHT_DESIGN_PX * navbarUiScale : 0;
+  const resultsY = (tallAspect ? 34 : 28) * k + navbarInsetY;
+  /** Avstånd från resultatrutans topp till första kortets centrum (matchar rubrik + “Sortera”). */
+  const resultsHeaderH = tallAspect ? 138 * k : 104 * k;
   const firstY = resultsY + resultsHeaderH + cardHpx / 2;
   const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length;
   /** Space below the pagination bar so it isn’t flush with the scroll/content edge. */
-  const paginationMarginBottom = (tallAspect ? 672 : 512) * k;
+  const paginationMarginBottom = (tallAspect ? 500 : 370) * k;
   const contentHeight = lastCardBottom + 60 * k + paginationMarginBottom;
   const movingLayerHeight = compactContentLayer ? height : contentHeight;
   const scrollDistance = Math.max(0, contentHeight - height);
@@ -941,75 +940,6 @@ const StaticScene: React.FC<{
         <div
           style={{
             position: "absolute",
-            top: headerTop,
-            left: resultsX,
-            right: resultsX,
-            display: "flex",
-            alignItems: "center",
-            gap: (tallAspect ? 28 : 18) * k,
-          }}
-        >
-          <Img
-            src={staticFile("snickare.png")}
-            style={{
-              width: (tallAspect ? 110 : 70) * k,
-              height: (tallAspect ? 110 : 70) * k,
-              borderRadius: "50%",
-              objectFit: "cover",
-              flexShrink: 0,
-            }}
-          />
-          <div>
-            <div
-              style={{
-                fontSize: (tallAspect ? 64 : 44) * k,
-                fontWeight: 800,
-                color: "#334630",
-                letterSpacing: -0.5,
-                lineHeight: 1.05,
-              }}
-            >
-              Snickare i Stockholm
-            </div>
-            <div
-              style={{
-                fontSize: (tallAspect ? 24 : 18) * k,
-                color: "#475569",
-                marginTop: (tallAspect ? 8 : 4) * k,
-              }}
-            >
-              Se timpriser direkt och filtrera på betyg.
-            </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            top: searchTop,
-            left: tallAspect ? resultsX : 184 * k,
-            width: tallAspect ? resultsW : 560 * k,
-            height: searchHeight,
-            borderRadius: 999,
-            border: `${1 * k}px solid #d5dbe0`,
-            background: "#ffffff",
-            boxShadow: "0 8px 18px rgba(15, 23, 42, 0.06)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingLeft: (tallAspect ? 32 : 22) * k,
-            paddingRight: (tallAspect ? 32 : 22) * k,
-            fontSize: (tallAspect ? 22 : 15) * k,
-            color: "#94a3b8",
-          }}
-        >
-          Sök hantverkare, tjänst eller plats
-          <Search size={(tallAspect ? 26 : 18) * k} color="#94a3b8" strokeWidth={2} />
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
             top: resultsY,
             left: resultsX,
             width: resultsW,
@@ -1024,7 +954,7 @@ const StaticScene: React.FC<{
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: (tallAspect ? 24 : 16) * k, color: "#1f2937", fontWeight: 600 }}>
-              145 Resultat
+              7653 Resultat
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: (tallAspect ? 12 : 8) * k }}>
               <span style={{ fontSize: (tallAspect ? 18 : 13) * k, color: "#374151" }}>ROT-avdrag</span>
@@ -1162,7 +1092,7 @@ const StaticScene: React.FC<{
         </div>
       </div>
 
-      {showNavbar ? <NavbarMock uiScale={k} /> : null}
+      {showNavbar ? <NavbarMock uiScale={navbarUiScale} /> : null}
     </AbsoluteFill>
   );
 };
@@ -1174,26 +1104,27 @@ const ScaledPremiumStaticScene: React.FC<{
   segmentFrames: number;
   startDelayFrames?: number;
   contentStartOffsetYPx?: number;
+  /** Placera HK-navbar över premiumlistan i split/full panel. */
+  showNavbar?: boolean;
 }> = ({
   panelWidth,
-  panelHeight,
+  panelHeight: _panelHeight,
   segmentFrames,
   startDelayFrames = 0,
   contentStartOffsetYPx = 90,
+  showNavbar = true,
 }) => {
   const { width: cw, height: ch } = useVideoConfig();
   const widthScale = panelWidth / cw;
-  /** Fill panel width; vertical overflow is clipped (panel is top-aligned, half-height in split view). */
+  /** Fill panel width; vertical overflow is clipped (panel is top-aligned in split view). */
   const scale = widthScale;
-  const scaledHeight = ch * scale;
-  const topOffset = Math.max(0, (panelHeight - scaledHeight) / 2);
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#ffffff" }}>
       <div
         style={{
           position: "absolute",
           left: "50%",
-          top: topOffset,
+          top: 0,
           width: cw,
           height: ch,
           transform: `translateX(-50%) scale(${scale})`,
@@ -1205,13 +1136,14 @@ const ScaledPremiumStaticScene: React.FC<{
           startDelayFrames={startDelayFrames}
           contentStartOffsetYPx={contentStartOffsetYPx}
           compactContentLayer
+          showNavbar={showNavbar}
         />
       </div>
     </div>
   );
 };
 
-/** Same pattern as `ScaledPremiumStaticScene`: full `HanellGoogleVideo` composition (960×540), scaled to fit, top-aligned, white below. */
+/** Design size for `HanellGoogleVideo` before scaling into the split-panel slot. */
 const HANELL_DESIGN_W = 960;
 const HANELL_DESIGN_H = 540;
 
@@ -1219,9 +1151,8 @@ const ScaledHanellGoogleVideo: React.FC<{
   panelWidth: number;
   panelHeight: number;
 }> = ({ panelWidth, panelHeight }) => {
-  const widthScale = panelWidth / HANELL_DESIGN_W;
-  const heightScale = panelHeight / HANELL_DESIGN_H;
-  const scale = Math.min(widthScale, heightScale);
+  /** Contain in panel so footer pagination is never clipped (width-only scale overflowed the bottom half). */
+  const scale = Math.min(panelWidth / HANELL_DESIGN_W, panelHeight / HANELL_DESIGN_H);
   const scaledHeight = HANELL_DESIGN_H * scale;
   const topOffset = Math.max(0, (panelHeight - scaledHeight) / 2);
   return (
@@ -1245,10 +1176,9 @@ const ScaledHanellGoogleVideo: React.FC<{
 
 const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentFrames }) => {
   const { width, height } = useVideoConfig();
-  const stackGap = 0;
   const panelWidth = width;
   const panelHeight = height;
-  const rowHeight = (panelHeight - stackGap) / 2;
+  const rowHeight = panelHeight / 2;
 
   return (
     <AbsoluteFill
@@ -1276,23 +1206,21 @@ const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentF
             height: panelHeight,
             position: "relative",
             background: "#ffffff",
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gridTemplateRows: "1fr 1fr",
-            gap: stackGap,
+            display: "flex",
+            flexDirection: "column",
             boxSizing: "border-box",
           }}
         >
-          <div style={{ position: "relative", minHeight: 0, overflow: "hidden" }}>
+          <div style={{ flex: "1 1 0%", minHeight: 0, position: "relative", overflow: "hidden" }}>
             <ScaledPremiumStaticScene
               panelWidth={panelWidth}
               panelHeight={rowHeight}
               segmentFrames={segmentFrames}
               startDelayFrames={18}
-              contentStartOffsetYPx={220}
+              contentStartOffsetYPx={44}
             />
           </div>
-          <div style={{ position: "relative", minHeight: 0, overflow: "hidden" }}>
+          <div style={{ flex: "1 1 0%", minHeight: 0, position: "relative", overflow: "hidden" }}>
             <ScaledHanellGoogleVideo panelWidth={panelWidth} panelHeight={rowHeight} />
           </div>
         </div>
@@ -1342,7 +1270,7 @@ const HantverkskollenWithIntro: React.FC = () => {
   return (
     <AbsoluteFill>
       <div style={{ position: "absolute", inset: 0, opacity: mainOpacity }}>
-        <StaticScene frameOffset={introFrames} />
+        <StaticScene frameOffset={introFrames} showNavbar />
       </div>
       <div style={{ position: "absolute", inset: 0, opacity: introOpacity }}>
         <IntroCompanyJoinScene />
