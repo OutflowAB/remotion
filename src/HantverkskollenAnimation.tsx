@@ -785,7 +785,9 @@ const StaticScene: React.FC<{
   const resultsHeaderH = tallAspect ? 150 * k : 120 * k;
   const firstY = resultsY + resultsHeaderH + cardHpx / 2;
   const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length;
-  const contentHeight = lastCardBottom + 60 * k;
+  /** Space below the pagination bar so it isn’t flush with the scroll/content edge. */
+  const paginationMarginBottom = (tallAspect ? 672 : 512) * k;
+  const contentHeight = lastCardBottom + 60 * k + paginationMarginBottom;
   const movingLayerHeight = compactContentLayer ? height : contentHeight;
   const scrollDistance = Math.max(0, contentHeight - height);
 
@@ -1130,6 +1132,7 @@ const StaticScene: React.FC<{
             zIndex: 4,
             opacity: underCardOpacity,
             transform: `translate(-50%, ${underCardExtraY}px)`,
+            marginBottom: paginationMarginBottom,
           }}
         >
           <ChevronsLeft size={(tallAspect ? 24 : 18) * k} color="rgba(255,255,255,0.65)" strokeWidth={2.1} />
@@ -1164,7 +1167,7 @@ const StaticScene: React.FC<{
   );
 };
 
-/** Same `StaticScene` math as full composition, scaled down to fit a panel (no narrow-layout quirks). */
+/** Same `StaticScene` as full composition, scaled to panel width; overflow is clipped vertically when the panel is shorter. */
 const ScaledPremiumStaticScene: React.FC<{
   panelWidth: number;
   panelHeight: number;
@@ -1180,8 +1183,8 @@ const ScaledPremiumStaticScene: React.FC<{
 }) => {
   const { width: cw, height: ch } = useVideoConfig();
   const widthScale = panelWidth / cw;
-  const heightScale = panelHeight / ch;
-  const scale = Math.min(widthScale, heightScale) * 0.9;
+  /** Fill panel width; vertical overflow is clipped (panel is top-aligned, half-height in split view). */
+  const scale = widthScale;
   const scaledHeight = ch * scale;
   const topOffset = Math.max(0, (panelHeight - scaledHeight) / 2);
   return (

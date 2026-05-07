@@ -40,7 +40,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
   return (
     <div
       style={{
-        marginBottom: 32 * u,
+        marginBottom: 22 * u,
       }}
     >
       <div
@@ -306,7 +306,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed">[] = [
 ];
 
 /** Halverar inte marginal under sista raden i scroll-mått (padding i kolumnen räknas inte som innehåll). */
-const ROW_MARGIN = 32;
+const ROW_MARGIN = 22;
 const HEADER_BLOCK_PX = 40;
 const SNIPPET_PX = 44;
 
