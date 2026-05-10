@@ -25,6 +25,8 @@ type ResultRowProps = {
     /** Efter fullständig text: skala upp + flytta uppåt (närmare kameran). */
     liftAfter?: { durationFrames: number };
   };
+  /** Extra nedre marginal i samma enheter som bas (`22 * u`). */
+  marginBottomExtraU?: number;
 };
 
 function sliceTypewriterSegments(segments: string[], progress: number): string[] {
@@ -66,6 +68,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
   snippet,
   iconSeed,
   typewriter,
+  marginBottomExtraU = 0,
 }) => {
   const frame = useCurrentFrame();
   const u = GOOGLE_RESULT_ROW_SCALE;
@@ -141,7 +144,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
           easing: Easing.out(Easing.cubic),
         })
       : 0;
-  const liftShadowAlpha = interpolate(liftProgress, [0, 1], [0, 0.1], {
+  const liftShadowAlpha = interpolate(liftProgress, [0, 1], [0, 0.28], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
@@ -153,7 +156,8 @@ const ResultRow: React.FC<ResultRowProps> = ({
   return (
     <div
       style={{
-        marginBottom: 22 * u,
+        marginTop: liftCfg ? 14 * u : undefined,
+        marginBottom: (22 + marginBottomExtraU) * u,
         paddingLeft: rowPadX,
         paddingRight: rowPadX,
         paddingTop: rowPadY,
@@ -170,7 +174,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
               transformOrigin: "50% 12%",
               boxShadow:
                 liftShadowAlpha > 0.001
-                  ? `0 ${10 * liftProgress}px ${34 * liftProgress}px rgba(32,33,36,${liftShadowAlpha})`
+                  ? `0 ${20 * liftProgress}px ${64 * liftProgress}px rgba(32,33,36,${liftShadowAlpha})`
                   : undefined,
               borderRadius: 10 * k * liftProgress,
             }
@@ -470,6 +474,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
     source: "Fortnox",
     snippet:
       "Sök bland svenska företag med uppdaterade uppgifter från officiella register. Se omsättning, bolagsform, adress och bokslutsöversikt för liknande namn och org.nr.",
+    marginBottomExtraU: 12,
   },
   {
     title: "Hanell Vvs Konsult - Rörmokare i nykoping",
@@ -495,7 +500,10 @@ function estimateRowScrollHeight(title: string): number {
 }
 
 const RESULTS_SCROLL_HEIGHT_PX =
-  RESULTS.reduce((sum, r) => sum + estimateRowScrollHeight(r.title), 0) * GOOGLE_RESULT_ROW_SCALE;
+  RESULTS.reduce(
+    (sum, r) => sum + estimateRowScrollHeight(r.title) + (r.marginBottomExtraU ?? 0),
+    0,
+  ) * GOOGLE_RESULT_ROW_SCALE;
 
 /** Längd på scroll-rörelsen i bildrutor — lägre värde = snabbare (tidigare 250). */
 const GOOGLE_SCROLL_ANIMATION_FRAMES = 150;
