@@ -161,7 +161,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
         boxSizing: "border-box",
         ...(liftCfg
           ? {
-              maxWidth: 870 * k,
+              maxWidth: 1720 * k,
               marginLeft: "auto",
               marginRight: "auto",
               position: "relative",
