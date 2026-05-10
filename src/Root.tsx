@@ -1,6 +1,7 @@
 import "./index.css";
 import { Composition } from "remotion";
 import {
+  getHantverkskollenPremiumDurationInFrames,
   getHantverkskollenSearchJourneyDurationInFrames,
   HantverkskollenPremium,
   HantverkskollenSearchJourney,
@@ -13,7 +14,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="HantverkskollenPremium"
         component={HantverkskollenPremium}
-        durationInFrames={660}
+        durationInFrames={getHantverkskollenPremiumDurationInFrames(60)}
         fps={60}
         width={3840}
         height={2160}

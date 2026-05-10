@@ -399,9 +399,24 @@ const getFormSubmitClickFrame = (fps: number) => {
   return typingDoneFrame + moveStartDelay + moveDuration + afterArrivalDelay + afterPulseDelay;
 };
 
-/** Total längd för `HantverkskollenSearchJourney` (intro + split) vid given fps — håll i synk med `Root`. */
+/** Total längd för `HantverkskollenSearchJourney` (intro + split + grön avslutning) vid given fps — håll i synk med `Root`. */
 export function getHantverkskollenSearchJourneyDurationInFrames(fps: number): number {
-  return getFormSubmitClickFrame(fps) + getHanellGoogleMinDurationFrames(fps, 2);
+  return (
+    getFormSubmitClickFrame(fps) +
+    getHanellGoogleMinDurationFrames(fps, 2) +
+    Math.round(fps * 5)
+  );
+}
+
+/** Intro + huvudanimation (utan avslutande grön scen); tidigare hela `HantverkskollenPremium`-längd. */
+export const HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS = 660;
+
+/** Total längd för `HantverkskollenPremium` inkl. 5 s grön avslutning — håll i synk med `Root`. */
+export function getHantverkskollenPremiumDurationInFrames(fps: number): number {
+  return (
+    Math.round(HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS * (fps / 60)) +
+    Math.round(fps * 5)
+  );
 }
 
 const IntroCompanyJoinScene: React.FC<{
@@ -1252,6 +1267,7 @@ export const HantverkskollenSearchJourney: React.FC = () => {
   const introFrames = getFormSubmitClickFrame(fps);
   /** Matchar HanellGoogleVideo: typewriter+lyft+paus+scroll + 2 s stilla på slutet. */
   const splitFrames = getHanellGoogleMinDurationFrames(fps, 2);
+  const closingFrames = Math.round(fps * 5);
   return (
     <AbsoluteFill style={{ background: "#0f172a" }}>
       <Sequence durationInFrames={introFrames}>
@@ -1260,6 +1276,257 @@ export const HantverkskollenSearchJourney: React.FC = () => {
       <Sequence from={introFrames} durationInFrames={splitFrames}>
         <SplitGoogleAndFormScene segmentFrames={splitFrames} />
       </Sequence>
+      <Sequence from={introFrames + splitFrames} durationInFrames={closingFrames}>
+        <PremiumGreenClosingScene />
+      </Sequence>
+    </AbsoluteFill>
+  );
+};
+
+const BULLET_CLOSING_ITEMS = [
+  "Egen företagssida på Hantverkskollen",
+  "Synlighet i ert område",
+  "Möjlighet för kunder att hitta och kontakta er direkt",
+  "Fördelaktigare ranking jämfört med andra företag",
+  "Certifieringsmärkning på er profil",
+  "Ökad exponering och starkare förtroende",
+];
+
+/** Avslutande 5 s: grön bakgrund, fördelar + popularitetsdiagram (referensbilder). */
+const PremiumGreenClosingScene: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { width, height, fps } = useVideoConfig();
+  const tallAspect = height / width >= 1.02;
+  const k = tallAspect ? width / 1280 : Math.min(width / 1920, height / 1080);
+  const fadeIn = interpolate(frame, [0, Math.round(fps * 0.25)], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.22, 1, 0.36, 1),
+  });
+  const lineDraw = interpolate(frame, [Math.round(fps * 0.35), Math.round(fps * 2.2)], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.bezier(0.33, 1, 0.32, 1),
+  });
+
+  const chartMonths = ["Feb", "Apr", "Jun", "Aug", "Okt", "Dec"];
+  /** Normaliserad höjd 0 = topp, 1 = botten (trend enligt referens). */
+  const chartY = [0.34, 0.48, 0.3, 0.4, 0.32, 0.14];
+  const chartW = (tallAspect ? Math.min(720 * k, width - 80 * k) : 520 * k);
+  const chartH = 220 * k;
+  const padX = 44 * k;
+  const padY = 36 * k;
+  const plotW = chartW - padX * 2;
+  const plotH = chartH - padY * 2;
+  const points = chartY.map((yn, i) => {
+    const x = padX + (plotW * i) / (chartY.length - 1);
+    const y = padY + yn * plotH;
+    return { x, y };
+  });
+  const pathD = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+    .join(" ");
+
+  return (
+    <AbsoluteFill
+      style={{
+        background: "linear-gradient(165deg, #2a3d30 0%, #243528 48%, #1a2620 100%)",
+        fontFamily: "Inter, system-ui, sans-serif",
+        opacity: fadeIn,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: tallAspect ? "column" : "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: tallAspect ? 40 * k : 72 * k,
+          paddingLeft: tallAspect ? 48 * k : 100 * k,
+          paddingRight: tallAspect ? 48 * k : 100 * k,
+          paddingTop: tallAspect ? 36 * k : 0,
+          paddingBottom: tallAspect ? 36 * k : 0,
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            flex: tallAspect ? "0 0 auto" : "1 1 0",
+            width: tallAspect ? "100%" : undefined,
+            minWidth: 0,
+            maxWidth: tallAspect ? "100%" : 980 * k,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: 3 * k,
+              background: "rgba(255,255,255,0.22)",
+              borderRadius: 2 * k,
+              marginBottom: 36 * k,
+            }}
+          />
+          <div style={{ display: "flex", flexDirection: "column", gap: 22 * k }}>
+            {BULLET_CLOSING_ITEMS.map((text, idx) => {
+              const stagger = interpolate(
+                frame,
+                [8 + idx * 4, 22 + idx * 4],
+                [0, 1],
+                { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+              );
+              return (
+                <div
+                  key={text}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "flex-start",
+                    gap: 20 * k,
+                    opacity: stagger,
+                    transform: `translateY(${(1 - stagger) * 10 * k}px)`,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 38 * k,
+                      height: 38 * k,
+                      borderRadius: 999,
+                      background: "#f08c5e",
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginTop: 2 * k,
+                    }}
+                  >
+                    <svg width={18 * k} height={14 * k} viewBox="0 0 18 14" aria-hidden>
+                      <path
+                        d="M1 7 L6.5 12.5 L17 1.5"
+                        fill="none"
+                        stroke="#ffffff"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: (tallAspect ? 26 : 28) * k,
+                      lineHeight: 1.35,
+                      fontWeight: 500,
+                      color: "#e9f0e6",
+                      letterSpacing: -0.02,
+                    }}
+                  >
+                    {text}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div
+          style={{
+            flex: "0 0 auto",
+            width: tallAspect ? "100%" : chartW + 80 * k,
+            maxWidth: tallAspect ? 720 * k : undefined,
+            borderRadius: 20 * k,
+            background: "#f8f9f5",
+            border: `${1 * k}px solid rgba(51, 70, 48, 0.12)`,
+            boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
+            padding: 36 * k,
+            boxSizing: "border-box",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 30 * k,
+              fontWeight: 700,
+              color: "#2d4a32",
+              marginBottom: 8 * k,
+              letterSpacing: -0.03,
+            }}
+          >
+            Paketets popularitet
+          </div>
+          <div
+            style={{
+              fontSize: 19 * k,
+              fontWeight: 400,
+              color: "#5c6560",
+              marginBottom: 24 * k,
+              lineHeight: 1.4,
+            }}
+          >
+            Månadstrend över personer som överväger paketet.
+          </div>
+          <div
+            style={{
+              height: 2 * k,
+              background: "rgba(51, 70, 48, 0.1)",
+              marginBottom: 20 * k,
+            }}
+          />
+          <svg
+            width={chartW}
+            height={chartH}
+            viewBox={`0 0 ${chartW} ${chartH}`}
+            style={{ display: "block" }}
+            aria-label="Linjediagram"
+          >
+            {[0.25, 0.5, 0.75].map((t) => (
+              <line
+                key={t}
+                x1={padX}
+                x2={chartW - padX}
+                y1={padY + t * plotH}
+                y2={padY + t * plotH}
+                stroke="rgba(0,0,0,0.06)"
+                strokeWidth={1 * k}
+              />
+            ))}
+            <path
+              d={pathD}
+              fill="none"
+              stroke="#f08c5e"
+              strokeWidth={3.2 * k}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              pathLength={1}
+              strokeDasharray={1}
+              strokeDashoffset={1 - lineDraw}
+            />
+            {points.map((p) => (
+              <circle
+                key={`${p.x}-${p.y}`}
+                cx={p.x}
+                cy={p.y}
+                r={4.5 * k}
+                fill="#ffffff"
+                stroke="#f08c5e"
+                strokeWidth={2 * k}
+                opacity={lineDraw}
+              />
+            ))}
+            {chartMonths.map((label, i) => (
+              <text
+                key={label}
+                x={padX + (plotW * i) / (chartMonths.length - 1)}
+                y={chartH - 8 * k}
+                textAnchor="middle"
+                fill="#5c6560"
+                style={{ fontSize: 15 * k, fontFamily: "Inter, system-ui, sans-serif" }}
+              >
+                {label}
+              </text>
+            ))}
+          </svg>
+        </div>
+      </div>
     </AbsoluteFill>
   );
 };
@@ -1269,6 +1536,8 @@ const HantverkskollenWithIntro: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const introFrames = getFormSubmitClickFrame(fps);
+  const mainSegmentFrames = Math.round(HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS * (fps / 60));
+  const closingFrames = Math.round(fps * 5);
   const transitionFrames = Math.round(fps * 0.35);
   const introOpacity = interpolate(frame, [introFrames - transitionFrames, introFrames], [1, 0], {
     extrapolateLeft: "clamp",
@@ -1283,12 +1552,23 @@ const HantverkskollenWithIntro: React.FC = () => {
 
   return (
     <AbsoluteFill>
-      <div style={{ position: "absolute", inset: 0, opacity: mainOpacity }}>
-        <StaticScene frameOffset={introFrames} showNavbar />
-      </div>
-      <div style={{ position: "absolute", inset: 0, opacity: introOpacity }}>
-        <IntroCompanyJoinScene />
-      </div>
+      <Sequence durationInFrames={mainSegmentFrames}>
+        <AbsoluteFill>
+          <div style={{ position: "absolute", inset: 0, opacity: mainOpacity }}>
+            <StaticScene
+              frameOffset={introFrames}
+              showNavbar
+              clipDurationInFrames={mainSegmentFrames}
+            />
+          </div>
+          <div style={{ position: "absolute", inset: 0, opacity: introOpacity }}>
+            <IntroCompanyJoinScene />
+          </div>
+        </AbsoluteFill>
+      </Sequence>
+      <Sequence from={mainSegmentFrames} durationInFrames={closingFrames}>
+        <PremiumGreenClosingScene />
+      </Sequence>
     </AbsoluteFill>
   );
 };
