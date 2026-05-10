@@ -224,7 +224,7 @@ const Card: React.FC<CardProps> = ({
       <div
         style={{
           flex: 1,
-          padding: `${12 * uiScale}px ${16 * uiScale}px`,
+          padding: `${14 * uiScale}px ${16 * uiScale}px`,
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
@@ -310,7 +310,7 @@ const Card: React.FC<CardProps> = ({
           width: 200 * uiScale,
           borderLeft: `${1 * uiScale}px solid #d1d5db`,
           background: "#f3f4f6",
-          padding: `${14 * uiScale}px`,
+          padding: `${16 * uiScale}px`,
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
@@ -779,10 +779,12 @@ const StaticScene: React.FC<{
   const rowGap = cardHpx + (tallAspect ? 22 : 14) * k;
   /** Toppmarginal sedan hjälte och sökfält saknas; undvik överdrag under `NavbarMock` när den visas. */
   const navbarInsetY = showNavbar ? NAVBAR_BAR_HEIGHT_DESIGN_PX * navbarUiScale : 0;
-  const resultsY = (tallAspect ? 34 : 28) * k + navbarInsetY;
-  /** Avstånd från resultatrutans topp till första kortets centrum (matchar rubrik + “Sortera”). */
-  const resultsHeaderH = tallAspect ? 138 * k : 104 * k;
-  const firstY = resultsY + resultsHeaderH + cardHpx / 2;
+  /** Lägre värde = resultatruta högre upp i ramen. */
+  const resultsY = (tallAspect ? 20 : 14) * k + navbarInsetY;
+  /** Avstånd från resultatrutans topp till första kortets centrum (matchar rubrik + “Sortera” + vertikal padding). */
+  const resultsHeaderH = tallAspect ? 146 * k : 112 * k;
+  const resultsPanelMarginBottom = (tallAspect ? 20 : 16) * k;
+  const firstY = resultsY + resultsHeaderH + resultsPanelMarginBottom + cardHpx / 2;
   const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length;
   /** Space below the pagination bar so it isn’t flush with the scroll/content edge. */
   const paginationMarginBottom = (tallAspect ? 500 : 370) * k;
@@ -862,6 +864,8 @@ const StaticScene: React.FC<{
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
   const insertedCardY = interpolate(landProgress, [0, 1], [fixedContainerY, firstY]);
+  const insertedCardMarginTop = (tallAspect ? 20 : 16) * k;
+  const insertedCardYWithMargin = insertedCardY + insertedCardMarginTop;
   const insertedPopScale = interpolate(popIn, [0, 1], [0.88, 1]);
   const insertedPromoteScale = interpolate(frame, [liftStartFrame, liftEndFrame], [1, 1.08], {
     extrapolateLeft: "clamp",
@@ -948,8 +952,9 @@ const StaticScene: React.FC<{
             background: "#ffffff",
             boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)",
             padding: tallAspect
-              ? `${22 * k}px ${28 * k}px ${24 * k}px`
-              : `${14 * k}px ${20 * k}px ${18 * k}px`,
+              ? `${26 * k}px ${28 * k}px ${28 * k}px`
+              : `${18 * k}px ${20 * k}px ${22 * k}px`,
+            marginBottom: resultsPanelMarginBottom,
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1022,7 +1027,7 @@ const StaticScene: React.FC<{
         <div
           style={{
             transform: `scale(${insertedCardScale})`,
-            transformOrigin: `${listX}px ${insertedCardY}px`,
+            transformOrigin: `${listX}px ${insertedCardYWithMargin}px`,
             opacity: insertedCardOpacity,
             zIndex: 6,
             filter: "drop-shadow(0 16px 28px rgba(15,23,42,0.22))",
@@ -1030,7 +1035,7 @@ const StaticScene: React.FC<{
         >
           <Card
             x={listX}
-            y={insertedCardY}
+            y={insertedCardYWithMargin}
             title="Trygg Bygg Skåne AB"
             subtitle="Larmvägen 17, 113 32 Stockholm"
             price="220"

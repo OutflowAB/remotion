@@ -18,7 +18,39 @@ type ResultRowProps = {
   source: string;
   snippet: string;
   iconSeed: number;
+  /** Om satt: skriv ut radens texter tecken för tecken från `startFrame`. */
+  typewriter?: { startFrame: number; durationFrames: number };
 };
+
+function sliceTypewriterSegments(segments: string[], progress: number): string[] {
+  const totalLen = segments.reduce((a, s) => a + s.length, 0);
+  if (totalLen === 0) {
+    return segments.map(() => "");
+  }
+  let budget = Math.floor(progress * totalLen);
+  return segments.map((s) => {
+    const take = Math.min(budget, s.length);
+    budget -= take;
+    return s.slice(0, take);
+  });
+}
+
+const CARET_BLINK_PERIOD = 12;
+
+const TypingCaret: React.FC<{ u: number; color: string; frame: number }> = ({ u, color, frame }) => (
+  <span
+    aria-hidden
+    style={{
+      display: "inline-block",
+      marginLeft: 1 * u,
+      width: 2 * u,
+      height: 16 * u,
+      background: color,
+      opacity: frame % CARET_BLINK_PERIOD < CARET_BLINK_PERIOD / 2 ? 1 : 0.25,
+      verticalAlign: "text-bottom",
+    }}
+  />
+);
 
 const ResultRow: React.FC<ResultRowProps> = ({
   k,
@@ -28,7 +60,9 @@ const ResultRow: React.FC<ResultRowProps> = ({
   source,
   snippet,
   iconSeed,
+  typewriter,
 }) => {
+  const frame = useCurrentFrame();
   const u = GOOGLE_RESULT_ROW_SCALE;
   const padX = 128 * k;
   const iconPalettes = [
@@ -43,6 +77,39 @@ const ResultRow: React.FC<ResultRowProps> = ({
   ] as const;
   const [c1, c2] = iconPalettes[iconSeed % iconPalettes.length];
   const sourceLetter = source.slice(0, 1).toUpperCase();
+
+  const segments = typewriter
+    ? [source, urlPath, urlSubline ?? "", title, snippet]
+    : null;
+  let ds = source;
+  let dUrl = urlPath;
+  let dSub = urlSubline ?? "";
+  let dTitle = title;
+  let dSnippet = snippet;
+  let caretSeg: number | null = null;
+
+  if (typewriter && segments) {
+    const t = Math.max(0, frame - typewriter.startFrame);
+    const progress =
+      typewriter.durationFrames <= 0 ? 1 : Math.min(1, t / typewriter.durationFrames);
+    const slices = sliceTypewriterSegments(segments, progress);
+    ds = slices[0];
+    dUrl = slices[1];
+    dSub = slices[2];
+    dTitle = slices[3];
+    dSnippet = slices[4];
+    if (progress < 1) {
+      for (let i = 0; i < segments.length; i++) {
+        if (slices[i].length < segments[i].length) {
+          caretSeg = i;
+          break;
+        }
+      }
+      if (caretSeg === null) {
+        caretSeg = segments.length - 1;
+      }
+    }
+  }
 
   return (
     <div
@@ -83,7 +150,12 @@ const ResultRow: React.FC<ResultRowProps> = ({
           {sourceLetter}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ color: TEXT, fontSize: 14 * u, lineHeight: `${20 * u}px` }}>{source}</div>
+          <div style={{ color: TEXT, fontSize: 14 * u, lineHeight: `${20 * u}px` }}>
+            {typewriter ? ds : source}
+            {typewriter && caretSeg === 0 ? (
+              <TypingCaret u={u} color={TEXT} frame={frame} />
+            ) : null}
+          </div>
           <div
             style={{
               fontSize: 12 * u,
@@ -93,7 +165,10 @@ const ResultRow: React.FC<ResultRowProps> = ({
               textOverflow: "ellipsis",
             }}
           >
-            {urlPath}
+            {typewriter ? dUrl : urlPath}
+            {typewriter && caretSeg === 1 ? (
+              <TypingCaret u={u} color={MUTED} frame={frame} />
+            ) : null}
           </div>
           {urlSubline ? (
             <div
@@ -106,7 +181,10 @@ const ResultRow: React.FC<ResultRowProps> = ({
                 marginTop: 2 * u,
               }}
             >
-              {urlSubline}
+              {typewriter ? dSub : urlSubline}
+              {typewriter && caretSeg === 2 ? (
+                <TypingCaret u={u} color={MUTED} frame={frame} />
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -123,7 +201,10 @@ const ResultRow: React.FC<ResultRowProps> = ({
           lineHeight: `${26 * u}px`,
         }}
       >
-        {title}
+        {typewriter ? dTitle : title}
+        {typewriter && caretSeg === 3 ? (
+          <TypingCaret u={u} color={LINK} frame={frame} />
+        ) : null}
       </a>
       <div
         style={{
@@ -133,7 +214,10 @@ const ResultRow: React.FC<ResultRowProps> = ({
           maxWidth: "100%",
         }}
       >
-        {snippet}
+        {typewriter ? dSnippet : snippet}
+        {typewriter && caretSeg === 4 ? (
+          <TypingCaret u={u} color={MUTED} frame={frame} />
+        ) : null}
       </div>
     </div>
   );
@@ -171,12 +255,12 @@ const GOOGLE_RESULT_ROW_SCALE = 1.12;
 
 const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
   {
-    title: "Hanell Vvs Konsult - Rörmokare i nykoping",
-    urlPath: "https://www.hantverkskollen.se › ... › hanell-vvs-konsult",
-    urlSubline: "… › katalog › verksam › nyköping",
-    source: "Hantverkskollen",
+    title: "Hanell Vvs Konsult – org.nr och branschdata | Allabolag",
+    urlPath: "https://www.allabolag.se › nyköping › ... › hanell-vvs-konsult",
+    urlSubline: "… › bokslut › anställda",
+    source: "Allabolag",
     snippet:
-      "Hanell Vvs Konsult utför uppdrag i Nyköping och närliggande områden. Från vår bas på 611 22 Nyköping når vi dig snabbt. En professionell hantverkare med …",
+      "Se säte, omsättning, verksamhetsbeskrivning och styrelse. Utförlig rapport med jämförbara bolag och historik från senaste årsredovisningar.",
   },
   {
     title: "Anders Rune Hanell",
@@ -331,12 +415,12 @@ const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
       "Sök bland svenska företag med uppdaterade uppgifter från officiella register. Se omsättning, bolagsform, adress och bokslutsöversikt för liknande namn och org.nr.",
   },
   {
-    title: "Hanell Vvs Konsult – org.nr och branschdata | Allabolag",
-    urlPath: "https://www.allabolag.se › nyköping › ... › hanell-vvs-konsult",
-    urlSubline: "… › bokslut › anställda",
-    source: "Allabolag",
+    title: "Hanell Vvs Konsult - Rörmokare i nykoping",
+    urlPath: "https://www.hantverkskollen.se › ... › hanell-vvs-konsult",
+    urlSubline: "… › katalog › verksam › nyköping",
+    source: "Hantverkskollen",
     snippet:
-      "Se säte, omsättning, verksamhetsbeskrivning och styrelse. Utförlig rapport med jämförbara bolag och historik från senaste årsredovisningar.",
+      "Hanell Vvs Konsult utför uppdrag i Nyköping och närliggande områden. Från vår bas på 611 22 Nyköping når vi dig snabbt. En professionell hantverkare med …",
   },
 ];
 
@@ -546,7 +630,7 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
                   marginLeft: 12 * ck,
                   fontSize: 16 * ck,
                   color: TEXT,
-                  padding: `${12 * ck}px ${8 * ck}px 0`,
+                  padding: `0 ${8 * ck}px`,
                 }}
               >
                 Hanell Vvs Konsult
@@ -652,6 +736,11 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
               k={k}
               {...r}
               iconSeed={Math.floor((index * 17 + 11) % 97)}
+              typewriter={
+                index === RESULTS.length - 1
+                  ? { startFrame: 0, durationFrames: Math.round(fps * 2.25) }
+                  : undefined
+              }
             />
           ))}
           <GoogleResultPagination k={k} />
