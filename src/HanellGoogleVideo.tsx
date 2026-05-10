@@ -1,4 +1,4 @@
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { Camera, Mic, Search } from "lucide-react";
 
 const BG = "#ffffff";
@@ -18,6 +18,8 @@ type ResultRowProps = {
   source: string;
   snippet: string;
   iconSeed: number;
+  /** Om satt: ersätter gradientcirkeln med bilden (t.ex. Hantverkskollen-logga). */
+  iconSrc?: string;
   /** Om satt: skriv ut radens texter tecken för tecken från `startFrame`. */
   typewriter?: {
     startFrame: number;
@@ -98,6 +100,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
   source,
   snippet,
   iconSeed,
+  iconSrc,
   typewriter,
   marginBottomExtraU = 0,
   parentScrollY = 0,
@@ -119,6 +122,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
   ] as const;
   const [c1, c2] = iconPalettes[iconSeed % iconPalettes.length];
   const sourceLetter = source.slice(0, 1).toUpperCase();
+  const iconSize = 26 * u;
 
   const segments = typewriter
     ? [source, urlPath, urlSubline ?? "", title, snippet]
@@ -271,10 +275,10 @@ const ResultRow: React.FC<ResultRowProps> = ({
       >
         <div
           style={{
-            width: 26 * u,
-            height: 26 * u,
+            width: iconSize,
+            height: iconSize,
             borderRadius: "50%",
-            background: `linear-gradient(135deg, ${c1}, ${c2})`,
+            background: iconSrc ? "#ffffff" : `linear-gradient(135deg, ${c1}, ${c2})`,
             border: `${1 * u}px solid ${BORDER}`,
             flexShrink: 0,
             color: "#fff",
@@ -286,7 +290,19 @@ const ResultRow: React.FC<ResultRowProps> = ({
             overflow: "hidden",
           }}
         >
-          {sourceLetter}
+          {iconSrc ? (
+            <Img
+              src={iconSrc}
+              style={{
+                width: iconSize - 4 * u,
+                height: iconSize - 4 * u,
+                objectFit: "contain",
+                display: "block",
+              }}
+            />
+          ) : (
+            sourceLetter
+          )}
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ color: TEXT, fontSize: 14 * u, lineHeight: `${20 * u}px` }}>
@@ -543,12 +559,13 @@ const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
     marginBottomExtraU: 12,
   },
   {
-    title: "Målare i Karlskrona – offerter och omdömen | Hantverkskollen",
-    urlPath: "https://www.hantverkskollen.se › blekinge › karlskrona › malare",
+    title: "Anderssons Måleri AB – målare i Karlskrona | offerter och omdömen",
+    urlPath: "https://www.anderssons-maleri-ab.se › karlskrona › profil",
     urlSubline: "… › katalog › verifierad › rot-avdrag",
     source: "Hantverkskollen",
     snippet:
-      "Hitta fiktiva demo-firmor i Karlskrona med jämförbara timpriser och omdömen. Filtrera på ROT, boka meddelande och se lokala adresser i Blekinge.",
+      "Hitta Anna Andersson och Anderssons Måleri AB i Karlskrona med jämförbara timpriser och omdömen. Filtrera på ROT, boka meddelande och se lokala adresser i Blekinge.",
+    iconSrc: staticFile("logo-circle.svg"),
   },
 ];
 

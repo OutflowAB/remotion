@@ -46,13 +46,13 @@ const reveal = (progress: number, start: number, end: number) => {
 };
 
 const HANTVERK_IMAGES = [
-  "https://images.unsplash.com/photo-1595844730298-b960ff98fee0?w=160&h=160&fit=crop&q=70&auto=format",
+  "https://images.unsplash.com/photo-1615529328331-f8917597711f?w=160&h=160&fit=crop&q=70&auto=format",
   "https://images.unsplash.com/photo-1561297331-a9c00b9c2c44?w=160&h=160&fit=crop&q=70&auto=format",
   "https://images.unsplash.com/photo-1611021061285-16c871740efa?w=160&h=160&fit=crop&q=70&auto=format",
   "https://images.unsplash.com/photo-1544164560-adac3045edb2?w=160&h=160&fit=crop&q=70&auto=format",
   "https://images.unsplash.com/photo-1611021061218-761c355ed331?w=160&h=160&fit=crop&q=70&auto=format",
   "https://images.unsplash.com/photo-1626081063434-79a2169791b1?w=160&h=160&fit=crop&q=70&auto=format",
-  "https://images.unsplash.com/photo-1687422810663-c316494f725a?w=160&h=160&fit=crop&q=70&auto=format",
+  "https://images.unsplash.com/photo-1595844730298-b960ff98fee0?w=160&h=160&fit=crop&q=70&auto=format",
   "https://images.unsplash.com/photo-1608613304899-ea8098577e38?w=160&h=160&fit=crop&q=70&auto=format",
   "https://images.unsplash.com/photo-1590880795696-20c7dfadacde?w=160&h=160&fit=crop&q=70&auto=format",
   "https://images.unsplash.com/photo-1667923006173-9e0d2251f608?w=160&h=160&fit=crop&q=70&auto=format",
@@ -376,9 +376,9 @@ const FORM_DELAY_BEFORE_MOVE_SECONDS = 0.25;
 const FORM_CURSOR_MOVE_SECONDS = 0.3;
 const FORM_DELAY_AFTER_ARRIVAL_SECONDS = 0.25;
 const FORM_EXTRA_AFTER_PULSE_SECONDS = 0.03;
-const FORM_NAME = "Fiktiv Marin Snickeri Karlskrona AB";
-const FORM_ORG = "559876-4321";
-const FORM_CONTACT = "Elin Bergkvist";
+const FORM_NAME = "Anderssons Måleri AB";
+const FORM_ORG = "559123-4567";
+const FORM_CONTACT = "Anna Andersson";
 
 const getFormSubmitClickFrame = (fps: number) => {
   const pauseBetweenFields = Math.round(fps * FORM_PAUSE_BETWEEN_FIELDS_SECONDS);
@@ -1041,11 +1041,11 @@ const StaticScene: React.FC<{
           <Card
             x={listX}
             y={insertedCardYWithMargin}
-            title="Östersjöns Trygga Bygg AB"
+            title="Anderssons Måleri AB"
             subtitle="Wachtmeistergatan 11, 371 28 Karlskrona"
-            price="220"
-            driveFee="95 kr"
-            baseFee="150 kr"
+            price="840"
+            driveFee="270 kr"
+            baseFee="420 kr"
             imageUrl={HANTVERK_IMAGES[6]}
             uiScale={cardUiScale}
             cardWidth={cardWpx}
