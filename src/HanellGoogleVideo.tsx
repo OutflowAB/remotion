@@ -167,19 +167,25 @@ const ResultRow: React.FC<ResultRowProps> = ({
   });
 
   const rowPadX = liftCfg
-    ? interpolate(cardT, [0, 1], [padX, 18 * k], {
+    ? interpolate(cardT, [0, 1], [padX, 12 * k], {
         extrapolateLeft: "clamp",
         extrapolateRight: "clamp",
         easing: Easing.out(Easing.cubic),
       })
     : padX;
+  /** Undvik nästan noll padding/radius i början av lyftet — annars ser kortet “ihoptryckt” ut i smala embeds. */
   const rowPadY = liftCfg
-    ? interpolate(cardT, [0, 1], [0, 4 * k], {
+    ? interpolate(cardT, [0, 1], [5 * k, 4 * k], {
         extrapolateLeft: "clamp",
         extrapolateRight: "clamp",
         easing: Easing.out(Easing.cubic),
       })
     : 0;
+  const liftCardRadius = liftCfg ? interpolate(cardT, [0, 1], [9 * k, 10 * k], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  }) : 0;
 
   /** Kompensera list-scroll så sista raden sitter kvar; sluta lyfta z-index när kortet är platt och scrollen är klar (undvik “dubbelt kort” mot pagination). */
   const rawScrollCancelY =
@@ -210,9 +216,12 @@ const ResultRow: React.FC<ResultRowProps> = ({
           boxSizing: "border-box",
           ...(liftCfg
             ? {
-                maxWidth: cardT > 0.001 ? 1720 * k : undefined,
+                maxWidth: cardT > 0.001 ? 1740 * k : undefined,
+                /** Symmetrisk inset + auto-marginaler = centrerat kort (samma luft vänster/höger). */
+                width: cardT > 0.001 ? `calc(100% - ${44 * k}px)` : undefined,
                 marginLeft: cardT > 0.001 ? "auto" : undefined,
                 marginRight: cardT > 0.001 ? "auto" : undefined,
+                marginBottom: cardT > 0.001 ? 14 * k : undefined,
                 position: "relative",
                 zIndex:
                   liftProgress > 0 && !scrollStickActive ? 8 : undefined,
@@ -225,7 +234,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
                   liftShadowAlpha > 0.001
                     ? `0 ${20 * cardT}px ${64 * cardT}px rgba(32,33,36,${liftShadowAlpha})`
                   : undefined,
-                borderRadius: 10 * k * cardT,
+                borderRadius: liftCardRadius,
                 background: cardT > 0.001 ? BG : undefined,
               }
             : {}),
@@ -560,6 +569,8 @@ const RESULTS_SCROLL_HEIGHT_PX =
 const GOOGLE_SCROLL_ANIMATION_FRAMES = 150;
 /** Sista bildrutorna av scroll: lyft-kortet tonas till samma layout som övriga rader. */
 const GOOGLE_SCROLL_LIFT_CARD_FADE_FRAMES = 22;
+/** Allabolag försvinner från första träff (byte med Hantverkskollen) så här många sekunder före scroll-animationens slut. */
+const GOOGLE_RESULT_SWAP_EARLY_SEC = 0.1;
 
 /** Hantverkskollen-rad: skrivmaskin, sedan lyft — scroll startar efter båda (+ kort paus). */
 const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC = 2.25;
@@ -736,6 +747,17 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
     },
   );
 
+  /** När listan nästan skrollat klart: byt plats på första (Allabolag) och sista (Hantverkskollen) — `GOOGLE_RESULT_SWAP_EARLY_SEC` före scrollens slut. */
+  const nResults = RESULTS.length;
+  const resultSwapScrollFrame = Math.max(
+    0,
+    GOOGLE_SCROLL_ANIMATION_FRAMES - Math.round(fps * GOOGLE_RESULT_SWAP_EARLY_SEC),
+  );
+  const scrollComplete = scrollFrame >= resultSwapScrollFrame;
+  const resultDisplayOrder = scrollComplete
+    ? [nResults - 1, ...Array.from({ length: nResults - 2 }, (_, i) => i + 1), 0]
+    : Array.from({ length: nResults }, (_, i) => i);
+
   return (
     <AbsoluteFill
       style={{
@@ -887,28 +909,35 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
             Webbresultat
           </h2>
 
-          {RESULTS.map((r, index) => (
-            <ResultRow
-              key={`${index}-${r.urlPath}`}
-              k={k}
-              {...r}
-              iconSeed={Math.floor((index * 17 + 11) % 97)}
-              parentScrollY={index === RESULTS.length - 1 ? moveY : undefined}
-              stickAnchorMoveY={index === RESULTS.length - 1 ? stickAnchorMoveY : undefined}
-              liftCardHoldT={index === RESULTS.length - 1 ? liftCardHoldFactor : undefined}
-              typewriter={
-                index === RESULTS.length - 1
-                  ? {
-                      startFrame: 0,
-                      durationFrames: Math.round(fps * GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC),
-                      liftAfter: {
-                        durationFrames: Math.round(fps * GOOGLE_HANTVERKSKOLLEN_LIFT_SEC),
-                      },
-                    }
-                  : undefined
-              }
-            />
-          ))}
+          {resultDisplayOrder.map((resultIndex) => {
+            const r = RESULTS[resultIndex];
+            const isHantverkskollenRow = resultIndex === nResults - 1;
+            /** Efter scroll: moveY=0 men stickAnchorMoveY kan fortfarande vara −scrollMax → skulle flytta raden långt upp (lucka). Kompensation bara under scroll. */
+            const hantverkScrollStick =
+              isHantverkskollenRow && !scrollComplete;
+            return (
+              <ResultRow
+                key={r.urlPath}
+                k={k}
+                {...r}
+                iconSeed={Math.floor((resultIndex * 17 + 11) % 97)}
+                parentScrollY={hantverkScrollStick ? moveY : undefined}
+                stickAnchorMoveY={hantverkScrollStick ? stickAnchorMoveY : undefined}
+                liftCardHoldT={isHantverkskollenRow ? liftCardHoldFactor : undefined}
+                typewriter={
+                  isHantverkskollenRow
+                    ? {
+                        startFrame: 0,
+                        durationFrames: Math.round(fps * GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC),
+                        liftAfter: {
+                          durationFrames: Math.round(fps * GOOGLE_HANTVERKSKOLLEN_LIFT_SEC),
+                        },
+                      }
+                    : undefined
+                }
+              />
+            );
+          })}
           <GoogleResultPagination k={k} />
         </div>
       </div>
