@@ -35,6 +35,10 @@ type ResultRowProps = {
   parentScrollY?: number;
   /** `parentScrollY` i bildrutan när lyft-animationen just blivit klar (scroll-kompensationens nollpunkt). */
   stickAnchorMoveY?: number;
+  /**
+   * 1 under scroll efter lyft; går mot 0 när list-scrollen är klar så raden matchar övriga (ingen skugga/skalning).
+   */
+  liftCardHoldT?: number;
 };
 
 function sliceTypewriterSegments(segments: string[], progress: number): string[] {
@@ -79,6 +83,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
   marginBottomExtraU = 0,
   parentScrollY = 0,
   stickAnchorMoveY = 0,
+  liftCardHoldT = 1,
 }) => {
   const frame = useCurrentFrame();
   const u = GOOGLE_RESULT_ROW_SCALE;
@@ -138,9 +143,10 @@ const ResultRow: React.FC<ResultRowProps> = ({
     liftProgress =
       liftCfg.durationFrames <= 0 ? 1 : Math.min(1, Math.max(0, lf / liftCfg.durationFrames));
   }
+  const cardT = liftCfg ? liftProgress * liftCardHoldT : 0;
   const liftScale =
     liftCfg !== undefined
-      ? interpolate(liftProgress, [0, 1], [1, 1.06], {
+      ? interpolate(cardT, [0, 1], [1, 1.06], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.out(Easing.cubic),
@@ -148,28 +154,47 @@ const ResultRow: React.FC<ResultRowProps> = ({
       : 1;
   const liftTy =
     liftCfg !== undefined
-      ? interpolate(liftProgress, [0, 1], [0, -34 * k], {
+      ? interpolate(cardT, [0, 1], [0, -34 * k], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.out(Easing.cubic),
         })
       : 0;
-  const liftShadowAlpha = interpolate(liftProgress, [0, 1], [0, 0.28], {
+  const liftShadowAlpha = interpolate(cardT, [0, 1], [0, 0.28], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
 
-  const rowPadX = liftCfg ? 18 * k : padX;
-  const rowPadY = liftCfg ? 4 * k : 0;
+  const rowPadX = liftCfg
+    ? interpolate(cardT, [0, 1], [padX, 18 * k], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.out(Easing.cubic),
+      })
+    : padX;
+  const rowPadY = liftCfg
+    ? interpolate(cardT, [0, 1], [0, 4 * k], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.out(Easing.cubic),
+      })
+    : 0;
 
-  const scrollStickActive = Boolean(liftCfg && liftProgress >= 1);
-  const scrollCancelY = scrollStickActive ? stickAnchorMoveY - parentScrollY : 0;
+  /** Kompensera list-scroll så sista raden sitter kvar; sluta lyfta z-index när kortet är platt och scrollen är klar (undvik “dubbelt kort” mot pagination). */
+  const rawScrollCancelY =
+    liftCfg && liftProgress >= 1 ? stickAnchorMoveY - parentScrollY : 0;
+  const scrollStickActive = Boolean(
+    liftCfg &&
+      liftProgress >= 1 &&
+      (cardT > 0.001 || Math.abs(rawScrollCancelY) > 0.5),
+  );
+  const scrollCancelY = scrollStickActive ? rawScrollCancelY : 0;
 
   return (
     <div
       style={{
-        marginTop: liftCfg ? 14 * u : undefined,
+        marginTop: liftCfg && cardT > 0.001 ? 14 * u * cardT : undefined,
         marginBottom: (22 + marginBottomExtraU) * u,
         transform: scrollCancelY !== 0 ? `translateY(${scrollCancelY}px)` : undefined,
         position: scrollStickActive ? "relative" : undefined,
@@ -185,20 +210,23 @@ const ResultRow: React.FC<ResultRowProps> = ({
           boxSizing: "border-box",
           ...(liftCfg
             ? {
-                maxWidth: 1720 * k,
-                marginLeft: "auto",
-                marginRight: "auto",
+                maxWidth: cardT > 0.001 ? 1720 * k : undefined,
+                marginLeft: cardT > 0.001 ? "auto" : undefined,
+                marginRight: cardT > 0.001 ? "auto" : undefined,
                 position: "relative",
                 zIndex:
                   liftProgress > 0 && !scrollStickActive ? 8 : undefined,
-                transform: `scale(${liftScale}) translateY(${liftTy}px)`,
+                transform:
+                  cardT > 0.001
+                    ? `scale(${liftScale}) translateY(${liftTy}px)`
+                    : undefined,
                 transformOrigin: "50% 12%",
                 boxShadow:
                   liftShadowAlpha > 0.001
-                    ? `0 ${20 * liftProgress}px ${64 * liftProgress}px rgba(32,33,36,${liftShadowAlpha})`
-                    : undefined,
-                borderRadius: 10 * k * liftProgress,
-                background: liftProgress > 0 ? BG : undefined,
+                    ? `0 ${20 * cardT}px ${64 * cardT}px rgba(32,33,36,${liftShadowAlpha})`
+                  : undefined,
+                borderRadius: 10 * k * cardT,
+                background: cardT > 0.001 ? BG : undefined,
               }
             : {}),
         }}
@@ -530,6 +558,8 @@ const RESULTS_SCROLL_HEIGHT_PX =
 
 /** Längd på scroll-rörelsen i bildrutor — lägre värde = snabbare (tidigare 250). */
 const GOOGLE_SCROLL_ANIMATION_FRAMES = 150;
+/** Sista bildrutorna av scroll: lyft-kortet tonas till samma layout som övriga rader. */
+const GOOGLE_SCROLL_LIFT_CARD_FADE_FRAMES = 22;
 
 /** Hantverkskollen-rad: skrivmaskin, sedan lyft — scroll startar efter båda (+ kort paus). */
 const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC = 2.25;
@@ -692,6 +722,20 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
     },
   );
 
+  const liftCardHoldFactor = interpolate(
+    scrollFrame,
+    [
+      GOOGLE_SCROLL_ANIMATION_FRAMES - GOOGLE_SCROLL_LIFT_CARD_FADE_FRAMES,
+      GOOGLE_SCROLL_ANIMATION_FRAMES,
+    ],
+    [1, 0],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.out(Easing.cubic),
+    },
+  );
+
   return (
     <AbsoluteFill
       style={{
@@ -851,6 +895,7 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
               iconSeed={Math.floor((index * 17 + 11) % 97)}
               parentScrollY={index === RESULTS.length - 1 ? moveY : undefined}
               stickAnchorMoveY={index === RESULTS.length - 1 ? stickAnchorMoveY : undefined}
+              liftCardHoldT={index === RESULTS.length - 1 ? liftCardHoldFactor : undefined}
               typewriter={
                 index === RESULTS.length - 1
                   ? {
