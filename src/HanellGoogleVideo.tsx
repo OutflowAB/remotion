@@ -19,7 +19,12 @@ type ResultRowProps = {
   snippet: string;
   iconSeed: number;
   /** Om satt: skriv ut radens texter tecken för tecken från `startFrame`. */
-  typewriter?: { startFrame: number; durationFrames: number };
+  typewriter?: {
+    startFrame: number;
+    durationFrames: number;
+    /** Efter fullständig text: skala upp + flytta uppåt (närmare kameran). */
+    liftAfter?: { durationFrames: number };
+  };
 };
 
 function sliceTypewriterSegments(segments: string[], progress: number): string[] {
@@ -111,13 +116,65 @@ const ResultRow: React.FC<ResultRowProps> = ({
     }
   }
 
+  const liftCfg = typewriter?.liftAfter;
+  const typeEndFrame =
+    typewriter && liftCfg ? typewriter.startFrame + typewriter.durationFrames : null;
+  let liftProgress = 0;
+  if (typeEndFrame !== null && liftCfg) {
+    const lf = frame - typeEndFrame;
+    liftProgress =
+      liftCfg.durationFrames <= 0 ? 1 : Math.min(1, Math.max(0, lf / liftCfg.durationFrames));
+  }
+  const liftScale =
+    liftCfg !== undefined
+      ? interpolate(liftProgress, [0, 1], [1, 1.06], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.out(Easing.cubic),
+        })
+      : 1;
+  const liftTy =
+    liftCfg !== undefined
+      ? interpolate(liftProgress, [0, 1], [0, -34 * k], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.out(Easing.cubic),
+        })
+      : 0;
+  const liftShadowAlpha = interpolate(liftProgress, [0, 1], [0, 0.1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.out(Easing.cubic),
+  });
+
+  const rowPadX = liftCfg ? 18 * k : padX;
+  const rowPadY = liftCfg ? 4 * k : 0;
+
   return (
     <div
       style={{
         marginBottom: 22 * u,
-        paddingLeft: padX,
-        paddingRight: padX,
+        paddingLeft: rowPadX,
+        paddingRight: rowPadX,
+        paddingTop: rowPadY,
+        paddingBottom: rowPadY,
         boxSizing: "border-box",
+        ...(liftCfg
+          ? {
+              maxWidth: 870 * k,
+              marginLeft: "auto",
+              marginRight: "auto",
+              position: "relative",
+              zIndex: liftProgress > 0 ? 8 : 1,
+              transform: `scale(${liftScale}) translateY(${liftTy}px)`,
+              transformOrigin: "50% 12%",
+              boxShadow:
+                liftShadowAlpha > 0.001
+                  ? `0 ${10 * liftProgress}px ${34 * liftProgress}px rgba(32,33,36,${liftShadowAlpha})`
+                  : undefined,
+              borderRadius: 10 * k * liftProgress,
+            }
+          : {}),
       }}
     >
       <div
@@ -443,6 +500,11 @@ const RESULTS_SCROLL_HEIGHT_PX =
 /** Längd på scroll-rörelsen i bildrutor — lägre värde = snabbare (tidigare 250). */
 const GOOGLE_SCROLL_ANIMATION_FRAMES = 150;
 
+/** Hantverkskollen-rad: skrivmaskin, sedan lyft — scroll startar efter båda (+ kort paus). */
+const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC = 2.25;
+const GOOGLE_HANTVERKSKOLLEN_LIFT_SEC = 0.85;
+const GOOGLE_SCROLL_AFTER_INTRO_PAUSE_SEC = 0.12;
+
 const TABS = ["All", "Images", "Videos", "News", "Short videos", "Web", "More"];
 
 const GOOGLE_PAGINATION_HEIGHT_PX = 460;
@@ -547,8 +609,13 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { width: cw, height: ch, fps } = useVideoConfig();
-  /** Vänta 2,5 s innan resultatlistan scrollar uppåt. */
-  const googleScrollDelayFrames = Math.round(fps * 2.5);
+  /** Vänta tills Hantverkskollen-raden skrivits klart och lyfts, sedan kort paus innan scroll. */
+  const googleScrollDelayFrames = Math.round(
+    fps *
+      (GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC +
+        GOOGLE_HANTVERKSKOLLEN_LIFT_SEC +
+        GOOGLE_SCROLL_AFTER_INTRO_PAUSE_SEC),
+  );
   const scrollFrame = frame - googleScrollDelayFrames;
   const width = layoutWidth ?? cw;
   const height = layoutHeight ?? ch;
@@ -738,7 +805,13 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
               iconSeed={Math.floor((index * 17 + 11) % 97)}
               typewriter={
                 index === RESULTS.length - 1
-                  ? { startFrame: 0, durationFrames: Math.round(fps * 2.25) }
+                  ? {
+                      startFrame: 0,
+                      durationFrames: Math.round(fps * GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC),
+                      liftAfter: {
+                        durationFrames: Math.round(fps * GOOGLE_HANTVERKSKOLLEN_LIFT_SEC),
+                      },
+                    }
                   : undefined
               }
             />
