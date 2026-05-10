@@ -393,6 +393,9 @@ const GoogleMark: React.FC<{ size?: number }> = ({ size = 92 }) => (
 /** Proportional size increase for each result block (same layout ratios). */
 const GOOGLE_RESULT_ROW_SCALE = 1.12;
 
+/** Mock query in the sticky search field (fiktiv demo). */
+const GOOGLE_MOCK_SEARCH_QUERY = "målare i Karlskrona";
+
 const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
   {
     title: "Hanell Vvs Konsult – org.nr och branschdata | Allabolag",
@@ -556,12 +559,12 @@ const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
     marginBottomExtraU: 12,
   },
   {
-    title: "Hanell Vvs Konsult - Rörmokare i nykoping",
-    urlPath: "https://www.hantverkskollen.se › ... › hanell-vvs-konsult",
-    urlSubline: "… › katalog › verksam › nyköping",
+    title: "Målare i Karlskrona – offerter och omdömen | Hantverkskollen",
+    urlPath: "https://www.hantverkskollen.se › blekinge › karlskrona › malare",
+    urlSubline: "… › katalog › verifierad › rot-avdrag",
     source: "Hantverkskollen",
     snippet:
-      "Hanell Vvs Konsult utför uppdrag i Nyköping och närliggande områden. Från vår bas på 611 22 Nyköping når vi dig snabbt. En professionell hantverkare med …",
+      "Hitta fiktiva demo-firmor i Karlskrona med jämförbara timpriser och omdömen. Filtrera på ROT, boka meddelande och se lokala adresser i Blekinge.",
   },
 ];
 
@@ -847,7 +850,7 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
                   padding: `0 ${8 * ck}px`,
                 }}
               >
-                Hanell Vvs Konsult
+                {GOOGLE_MOCK_SEARCH_QUERY}
               </div>
               <Mic size={20 * ck} color={MUTED} strokeWidth={2} style={{ marginRight: 16 * ck }} />
               <Camera size={20 * ck} color={MUTED} strokeWidth={2} />

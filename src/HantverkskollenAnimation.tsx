@@ -347,26 +347,26 @@ const Card: React.FC<CardProps> = ({
 };
 
 const COMPANIES: { title: string; subtitle: string; price: string }[] = [
-  { title: "Nordhamn Bygg AB", subtitle: "Sveavägen 112, 113 50 Stockholm", price: "395" },
-  { title: "Takfönsterspecialisten Sverige AB", subtitle: "Hantverkargatan 44, 112 21 Stockholm", price: "845" },
-  { title: "Sund Byggservice", subtitle: "Drottninggatan 14, 111 51 Stockholm", price: "515" },
-  { title: "NordVest Snickeri AB", subtitle: "Norrtullsgatan 22, 113 45 Stockholm", price: "735" },
-  { title: "Bygg & Renovering Skåne", subtitle: "Sankt Eriksgatan 5, 112 39 Stockholm", price: "460" },
-  { title: "Stockholms Hantverk", subtitle: "Kungsgatan 18, 111 43 Stockholm", price: "680" },
-  { title: "Snickeri Pålsson AB", subtitle: "Birkagatan 33, 113 39 Stockholm", price: "575" },
-  { title: "Skånska Byggteamet", subtitle: "Odengatan 12, 114 24 Stockholm", price: "910" },
-  { title: "BoBygg Stockholm", subtitle: "Tegnérgatan 7, 111 40 Stockholm", price: "425" },
-  { title: "Limhamn Snickeri", subtitle: "Strandvägen 41, 114 56 Stockholm", price: "790" },
-  { title: "Olssons Bygg & Snickeri", subtitle: "Västmannagatan 24, 113 25 Stockholm", price: "640" },
-  { title: "Hantverkare Direkt AB", subtitle: "Scheelegatan 16, 112 23 Stockholm", price: "485" },
-  { title: "MD Bygg Stockholm", subtitle: "Hornsgatan 9, 118 20 Stockholm", price: "705" },
-  { title: "Centrum Bygg Skåne", subtitle: "Järnvägsgatan 3, 111 20 Stockholm", price: "555" },
-  { title: "Elite Snickeri AB", subtitle: "Karlbergsvägen 14, 113 27 Stockholm", price: "980" },
-  { title: "Råå Byggteknik", subtitle: "Rörstrandsgatan 18, 113 40 Stockholm", price: "440" },
-  { title: "Pålsjö Hantverk", subtitle: "Sibyllegatan 6, 114 42 Stockholm", price: "760" },
-  { title: "Söderpunkten Bygg", subtitle: "Folkungagatan 15, 116 36 Stockholm", price: "525" },
-  { title: "Drottninghög Snickeri", subtitle: "Vasagatan 27, 111 20 Stockholm", price: "695" },
-  { title: "Maria Park Hantverk", subtitle: "Mariatorget 4, 118 48 Stockholm", price: "610" },
+  { title: "Amiralens Bygg & Måleri AB", subtitle: "Amiralitetsgatan 14, 371 31 Karlskrona", price: "395" },
+  { title: "Skärgårds Snickeri Blekinge AB", subtitle: "Saltövägen 7, 371 42 Karlskrona", price: "845" },
+  { title: "Krona El & Installation AB", subtitle: "Borgmästaregatan 33, 371 23 Karlskrona", price: "515" },
+  { title: "Marinparkens Renovering AB", subtitle: "Stortorget 3, 371 34 Karlskrona", price: "735" },
+  { title: "Trossö Hantverksservice AB", subtitle: "Småbåtsgatan 18, 371 38 Karlskrona", price: "460" },
+  { title: "Rosenholms Plattsättning AB", subtitle: "Rosenholmstorget 22, 371 36 Karlskrona", price: "680" },
+  { title: "Gräsviks Byggteknik AB", subtitle: "Campus Gräsvik 5, 371 75 Karlskrona", price: "575" },
+  { title: "Fredriksvern Snickerifabrik AB", subtitle: "Lagergatan 9, 371 35 Karlskrona", price: "910" },
+  { title: "Gullberna Finsnickeri AB", subtitle: "Gullbernavägen 41, 371 47 Karlskrona", price: "425" },
+  { title: "Aspöbåtens Montage AB", subtitle: "Skeppsbrogatan 12, 371 57 Karlskrona", price: "790" },
+  { title: "Lyckeby Allservice Bygg AB", subtitle: "Lyckebyleden 28, 371 61 Karlskrona", price: "640" },
+  { title: "Pantarholmen Tak & Fasad AB", subtitle: "Vämöallén 15, 371 39 Karlskrona", price: "485" },
+  { title: "Sturköbryggans Byggpartner AB", subtitle: "Kungsbron 6, 371 44 Karlskrona", price: "705" },
+  { title: "Ronnebygatans Snickeri AB", subtitle: "Ronnebygatan 55, 371 32 Karlskrona", price: "555" },
+  { title: "Blekingespecialisten Bygg AB", subtitle: "Nygatan 19, 371 33 Karlskrona", price: "980" },
+  { title: "Kungsports Renovering AB", subtitle: "Södra Kungsgatan 8, 371 37 Karlskrona", price: "440" },
+  { title: "Östra Sjögatans Hantverk AB", subtitle: "Östra Sjögatan 41, 371 41 Karlskrona", price: "760" },
+  { title: "Prästgårdens Snickeri AB", subtitle: "Prästgatan 27, 371 45 Karlskrona", price: "525" },
+  { title: "Mjölnarholmen Kök & Badrum AB", subtitle: "Fiskhamnsgatan 4, 371 58 Karlskrona", price: "695" },
+  { title: "Stumholmens Demo Måleri AB", subtitle: "Stumholmsvägen 16, 371 46 Karlskrona", price: "610" },
 ];
 
 const FORM_TYPING_CHARS_PER_FRAME = 0.74;
@@ -376,9 +376,9 @@ const FORM_DELAY_BEFORE_MOVE_SECONDS = 0.25;
 const FORM_CURSOR_MOVE_SECONDS = 0.3;
 const FORM_DELAY_AFTER_ARRIVAL_SECONDS = 0.25;
 const FORM_EXTRA_AFTER_PULSE_SECONDS = 0.03;
-const FORM_NAME = "Anderssons Måleri AB";
-const FORM_ORG = "559123-4567";
-const FORM_CONTACT = "Anna Andersson";
+const FORM_NAME = "Fiktiv Marin Snickeri Karlskrona AB";
+const FORM_ORG = "559876-4321";
+const FORM_CONTACT = "Elin Bergkvist";
 
 const getFormSubmitClickFrame = (fps: number) => {
   const pauseBetweenFields = Math.round(fps * FORM_PAUSE_BETWEEN_FIELDS_SECONDS);
@@ -828,7 +828,7 @@ const StaticScene: React.FC<{
       })
     : -scrollDistance;
 
-  const insertAfterIndex = 18; // Between Drottninghög and Maria Park
+  const insertAfterIndex = 18; // Between Mjölnarholmen and Stumholmen
   const mariaIndex = 19;
   const mariaShift = interpolate(
     frame,
@@ -964,7 +964,7 @@ const StaticScene: React.FC<{
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: (tallAspect ? 24 : 16) * k, color: "#1f2937", fontWeight: 600 }}>
-              7653 Resultat
+              287 Resultat
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: (tallAspect ? 12 : 8) * k }}>
               <span style={{ fontSize: (tallAspect ? 18 : 13) * k, color: "#374151" }}>ROT-avdrag</span>
@@ -1041,8 +1041,8 @@ const StaticScene: React.FC<{
           <Card
             x={listX}
             y={insertedCardYWithMargin}
-            title="Trygg Bygg Skåne AB"
-            subtitle="Larmvägen 17, 113 32 Stockholm"
+            title="Östersjöns Trygga Bygg AB"
+            subtitle="Wachtmeistergatan 11, 371 28 Karlskrona"
             price="220"
             driveFee="95 kr"
             baseFee="150 kr"
