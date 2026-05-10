@@ -22,6 +22,11 @@ type ResultRowProps = {
   typewriter?: {
     startFrame: number;
     durationFrames: number;
+    /**
+     * Multiplicerar “virtuell längd” per textblock [source, url, subline, title, snippet].
+     * Värde större än 1 gör att det blocket skrivs långsammare (bra när källnamnet är kort men ska synas tydligt).
+     */
+    segmentWeights?: number[];
     /** Efter fullständig text: skala upp + flytta uppåt (närmare kameran). */
     liftAfter?: { durationFrames: number };
   };
@@ -41,16 +46,30 @@ type ResultRowProps = {
   liftCardHoldT?: number;
 };
 
-function sliceTypewriterSegments(segments: string[], progress: number): string[] {
-  const totalLen = segments.reduce((a, s) => a + s.length, 0);
-  if (totalLen === 0) {
+function sliceTypewriterSegments(
+  segments: string[],
+  progress: number,
+  weights?: number[],
+): string[] {
+  const w = segments.map((_, i) => {
+    const wi = weights?.[i];
+    return wi != null && wi > 0 ? wi : 1;
+  });
+  const effLens = segments.map((s, i) => s.length * w[i]);
+  const totalEff = effLens.reduce((a, b) => a + b, 0);
+  if (totalEff <= 0) {
     return segments.map(() => "");
   }
-  let budget = Math.floor(progress * totalLen);
-  return segments.map((s) => {
-    const take = Math.min(budget, s.length);
-    budget -= take;
-    return s.slice(0, take);
+  let budget = progress * totalEff;
+  return segments.map((s, i) => {
+    if (s.length === 0) {
+      return "";
+    }
+    const effLen = s.length * w[i];
+    const takeEff = Math.min(budget, effLen);
+    budget -= takeEff;
+    const n = Math.min(s.length, Math.floor(takeEff / w[i] + 1e-9));
+    return s.slice(0, n);
   });
 }
 
@@ -115,7 +134,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
     const t = Math.max(0, frame - typewriter.startFrame);
     const progress =
       typewriter.durationFrames <= 0 ? 1 : Math.min(1, t / typewriter.durationFrames);
-    const slices = sliceTypewriterSegments(segments, progress);
+    const slices = sliceTypewriterSegments(segments, progress, typewriter.segmentWeights);
     ds = slices[0];
     dUrl = slices[1];
     dSub = slices[2];
@@ -573,9 +592,25 @@ const GOOGLE_SCROLL_LIFT_CARD_FADE_FRAMES = 22;
 const GOOGLE_RESULT_SWAP_EARLY_SEC = 0.1;
 
 /** Hantverkskollen-rad: skrivmaskin, sedan lyft — scroll startar efter båda (+ kort paus). */
-const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC = 2.25;
+const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC = 5.75;
+/** Mer tid till källraden (kort sträng vs lång URL/snippet) så “Hantverkskollen” hinner synas. */
+const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SOURCE_WEIGHT = 8;
 const GOOGLE_HANTVERKSKOLLEN_LIFT_SEC = 0.85;
 const GOOGLE_SCROLL_AFTER_INTRO_PAUSE_SEC = 0.12;
+
+/**
+ * Minsta `durationInFrames` så skrivmaskin + lyft + paus + lista-scroll (150 rutor) hinner klart.
+ * `endHoldSec` är stilla efter att scroll-intervallet passerats (ingen svart klippning mitt i rörelsen).
+ */
+export function getHanellGoogleMinDurationFrames(fps: number, endHoldSec = 1.75): number {
+  const introDelayFrames = Math.round(
+    fps *
+      (GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC +
+        GOOGLE_HANTVERKSKOLLEN_LIFT_SEC +
+        GOOGLE_SCROLL_AFTER_INTRO_PAUSE_SEC),
+  );
+  return introDelayFrames + GOOGLE_SCROLL_ANIMATION_FRAMES + Math.round(fps * endHoldSec);
+}
 
 const TABS = ["All", "Images", "Videos", "News", "Short videos", "Web", "More"];
 
@@ -929,6 +964,13 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
                     ? {
                         startFrame: 0,
                         durationFrames: Math.round(fps * GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC),
+                        segmentWeights: [
+                          GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SOURCE_WEIGHT,
+                          1,
+                          1,
+                          1,
+                          1,
+                        ],
                         liftAfter: {
                           durationFrames: Math.round(fps * GOOGLE_HANTVERKSKOLLEN_LIFT_SEC),
                         },

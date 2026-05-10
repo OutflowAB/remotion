@@ -21,7 +21,7 @@ import {
   FileText,
   Phone,
 } from "lucide-react";
-import { HanellGoogleVideo } from "./HanellGoogleVideo";
+import { getHanellGoogleMinDurationFrames, HanellGoogleVideo } from "./HanellGoogleVideo";
 
 type CardProps = {
   x: number;
@@ -398,6 +398,11 @@ const getFormSubmitClickFrame = (fps: number) => {
   const afterPulseDelay = Math.round(fps * FORM_EXTRA_AFTER_PULSE_SECONDS);
   return typingDoneFrame + moveStartDelay + moveDuration + afterArrivalDelay + afterPulseDelay;
 };
+
+/** Total längd för `HantverkskollenSearchJourney` (intro + split) vid given fps — håll i synk med `Root`. */
+export function getHantverkskollenSearchJourneyDurationInFrames(fps: number): number {
+  return getFormSubmitClickFrame(fps) + getHanellGoogleMinDurationFrames(fps, 2);
+}
 
 const IntroCompanyJoinScene: React.FC<{
   layoutWidth?: number;
@@ -1245,8 +1250,8 @@ const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentF
 export const HantverkskollenSearchJourney: React.FC = () => {
   const { fps } = useVideoConfig();
   const introFrames = getFormSubmitClickFrame(fps);
-  /** StaticScene + hold; +2,5 s på Google-panelen innan scroll (se HanellGoogleVideo). */
-  const splitFrames = Math.round(fps * 8.5);
+  /** Matchar HanellGoogleVideo: typewriter+lyft+paus+scroll + 2 s stilla på slutet. */
+  const splitFrames = getHanellGoogleMinDurationFrames(fps, 2);
   return (
     <AbsoluteFill style={{ background: "#0f172a" }}>
       <Sequence durationInFrames={introFrames}>
