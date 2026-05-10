@@ -27,6 +27,14 @@ type ResultRowProps = {
   };
   /** Extra nedre marginal i samma enheter som bas (`22 * u`). */
   marginBottomExtraU?: number;
+  /**
+   * Förälderns vertikala scroll-simulering (`translateY`) — aktuell bildruta.
+   * När lyft är klart adderas `stickAnchorMoveY - parentScrollY` så raden inte hoppar
+   * och sedan följer inte list-scrollen.
+   */
+  parentScrollY?: number;
+  /** `parentScrollY` i bildrutan när lyft-animationen just blivit klar (scroll-kompensationens nollpunkt). */
+  stickAnchorMoveY?: number;
 };
 
 function sliceTypewriterSegments(segments: string[], progress: number): string[] {
@@ -69,6 +77,8 @@ const ResultRow: React.FC<ResultRowProps> = ({
   iconSeed,
   typewriter,
   marginBottomExtraU = 0,
+  parentScrollY = 0,
+  stickAnchorMoveY = 0,
 }) => {
   const frame = useCurrentFrame();
   const u = GOOGLE_RESULT_ROW_SCALE;
@@ -153,34 +163,46 @@ const ResultRow: React.FC<ResultRowProps> = ({
   const rowPadX = liftCfg ? 18 * k : padX;
   const rowPadY = liftCfg ? 4 * k : 0;
 
+  const scrollStickActive = Boolean(liftCfg && liftProgress >= 1);
+  const scrollCancelY = scrollStickActive ? stickAnchorMoveY - parentScrollY : 0;
+
   return (
     <div
       style={{
         marginTop: liftCfg ? 14 * u : undefined,
         marginBottom: (22 + marginBottomExtraU) * u,
-        paddingLeft: rowPadX,
-        paddingRight: rowPadX,
-        paddingTop: rowPadY,
-        paddingBottom: rowPadY,
-        boxSizing: "border-box",
-        ...(liftCfg
-          ? {
-              maxWidth: 1720 * k,
-              marginLeft: "auto",
-              marginRight: "auto",
-              position: "relative",
-              zIndex: liftProgress > 0 ? 8 : 1,
-              transform: `scale(${liftScale}) translateY(${liftTy}px)`,
-              transformOrigin: "50% 12%",
-              boxShadow:
-                liftShadowAlpha > 0.001
-                  ? `0 ${20 * liftProgress}px ${64 * liftProgress}px rgba(32,33,36,${liftShadowAlpha})`
-                  : undefined,
-              borderRadius: 10 * k * liftProgress,
-            }
-          : {}),
+        transform: scrollCancelY !== 0 ? `translateY(${scrollCancelY}px)` : undefined,
+        position: scrollStickActive ? "relative" : undefined,
+        zIndex: scrollStickActive ? 8 : undefined,
       }}
     >
+      <div
+        style={{
+          paddingLeft: rowPadX,
+          paddingRight: rowPadX,
+          paddingTop: rowPadY,
+          paddingBottom: rowPadY,
+          boxSizing: "border-box",
+          ...(liftCfg
+            ? {
+                maxWidth: 1720 * k,
+                marginLeft: "auto",
+                marginRight: "auto",
+                position: "relative",
+                zIndex:
+                  liftProgress > 0 && !scrollStickActive ? 8 : undefined,
+                transform: `scale(${liftScale}) translateY(${liftTy}px)`,
+                transformOrigin: "50% 12%",
+                boxShadow:
+                  liftShadowAlpha > 0.001
+                    ? `0 ${20 * liftProgress}px ${64 * liftProgress}px rgba(32,33,36,${liftShadowAlpha})`
+                    : undefined,
+                borderRadius: 10 * k * liftProgress,
+                background: liftProgress > 0 ? BG : undefined,
+              }
+            : {}),
+        }}
+      >
       <div
         style={{
           fontSize: 14 * u,
@@ -279,6 +301,7 @@ const ResultRow: React.FC<ResultRowProps> = ({
         {typewriter && caretSeg === 4 ? (
           <TypingCaret u={u} color={MUTED} frame={frame} />
         ) : null}
+      </div>
       </div>
     </div>
   );
@@ -654,6 +677,21 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
     easing: Easing.bezier(0.33, 0, 0.2, 1),
   });
 
+  const hantverkTypeFrames = Math.round(fps * GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC);
+  const hantverkLiftFrames = Math.round(fps * GOOGLE_HANTVERKSKOLLEN_LIFT_SEC);
+  const hantverkLiftCompleteFrame = hantverkTypeFrames + hantverkLiftFrames;
+  const stickAnchorScrollFrame = hantverkLiftCompleteFrame - googleScrollDelayFrames;
+  const stickAnchorMoveY = interpolate(
+    stickAnchorScrollFrame,
+    [0, GOOGLE_SCROLL_ANIMATION_FRAMES],
+    [-scrollMax, 0],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+      easing: Easing.bezier(0.33, 0, 0.2, 1),
+    },
+  );
+
   return (
     <AbsoluteFill
       style={{
@@ -811,6 +849,8 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
               k={k}
               {...r}
               iconSeed={Math.floor((index * 17 + 11) % 97)}
+              parentScrollY={index === RESULTS.length - 1 ? moveY : undefined}
+              stickAnchorMoveY={index === RESULTS.length - 1 ? stickAnchorMoveY : undefined}
               typewriter={
                 index === RESULTS.length - 1
                   ? {
