@@ -398,164 +398,148 @@ const GOOGLE_MOCK_SEARCH_QUERY = "målare i Karlskrona";
 
 const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
   {
-    title: "Hanell Vvs Konsult – org.nr och branschdata | Allabolag",
-    urlPath: "https://www.allabolag.se › nyköping › ... › hanell-vvs-konsult",
-    urlSubline: "… › bokslut › anställda",
+    title: "Måleri & fasad i Karlskrona – bolagslista | Allabolag",
+    urlPath: "https://www.allabolag.se › blekinge › ... › maleri-karlskrona",
+    urlSubline: "… › bransch › omsättning",
     source: "Allabolag",
     snippet:
-      "Se säte, omsättning, verksamhetsbeskrivning och styrelse. Utförlig rapport med jämförbara bolag och historik från senaste årsredovisningar.",
+      "Översikt över registrerade aktiebolag med måleri och ytbehandling i Karlskrona. Se säte, bokslut och jämför liknande firmor i Blekinge län.",
   },
   {
-    title: "Anders Rune Hanell",
-    urlPath: "https://krafman.se › engagemang",
-    urlSubline: "… › personregister › styrelseuppdrag",
-    source: "Krafman",
+    title: "Inomhusmålning, tapet och kulörprover – demo",
+    urlPath: "https://www.demo-malarna-karlskrona.se › tjanster",
+    urlSubline: "/referenser › garanti › kontakt",
+    source: "demo-malarna-karlskrona.se",
     snippet:
-      "Hanell, Anders Rune är en man född den 24 februari 1963. Han är verksam i de företag och/eller föreningar som anges nedan.",
+      "Fiktiv demosajt: beskriver arbetsmoment, tidsplan och materialval för lägenheter och lokaler. Begär offert via formulär eller telefon.",
   },
   {
-    title: "Anbud",
-    urlPath: "https://app.pabliq.se › procurements › ...",
-    urlSubline: "… › anbud › upphandling",
-    source: "Pabliq",
-    snippet:
-      "EVK – Energi & VVS Konsult AB. Tekniska konsulter inom bygg. Sigma … amanda.hanell@ecenea.se. Dunderbergsgatan 2, 382 80 Nybro. Bransch. Region …",
-  },
-  {
-    title: "Hanell Consulting AB - Org.nr 559318-8898 - Sköndal",
-    urlPath: "https://www.allabolag.se › sköndal › ...",
-    urlSubline: "… › bokslut › nyckeltal",
+    title: "Amiralens Bygg & Måleri AB – org.nr och nyckeltal | Allabolag",
+    urlPath: "https://www.allabolag.se › karlskrona › ... › amiralens-bygg-mal",
+    urlSubline: "… › styrelse › anställda",
     source: "Allabolag",
     snippet:
-      "Företaget erbjuder konsultstöd och expertis inom utveckling av individ, grupp, ledarskap och företagskultur med syfte att utveckla kundens effektivitet …",
+      "Aktiebolag med säte i Karlskrona. Verksamhetsbeskrivning enligt register: måleri, mindre renoveringar och underhåll av lokaler.",
   },
   {
-    title: "Hanell Entreprenad – Hanell Entreprenad AB",
-    urlPath: "https://www.hanelle.se",
-    urlSubline: "/om-oss › järnväg › säkerhetskrav",
-    source: "Hanell Entreprenad",
+    title: "Blekinge Färglager – butik och uthyrning av utrustning",
+    urlPath: "https://www.blekinge-farglager-demo.se › butiker",
+    urlSubline: "/karlskrona › öppettider › sortiment",
+    source: "Blekinge Färglager (demo)",
     snippet:
-      "Vi är ett nytänkande företag som utför byggnationer och underhåll inom järnvägssektorn. Säkerhet är grundläggande i verksamheten.",
+      "Generell produktinformation om färgtyper, täckgrad och underlag. Tips inför måleri i kustklimat – endast illustration, inga riktiga öppettider.",
   },
   {
-    title: "Bästa Tillväxt 2025 - Gävle kommun",
-    urlPath: "https://upplysningar.syna.se › gavle-kommun-2180",
-    urlSubline: "… › rankning › snabbväxande",
+    title: "Lokala hantverkare i Blekinge – företagsregister",
+    urlPath: "https://upplysningar.syna.se › blekinge-lan",
+    urlSubline: "… › bransch › snabbväxande",
     source: "AB Syna",
     snippet:
-      "Hanell Entreprenad i Gävle AB finns med i listan tillsammans med andra lokala bolag. Offentliga uppgifter och bolagsdata.",
+      "Samlad vy över mindre serviceföretag: måleri, snickeri och underhåll. Offentliga grunduppgifter och branschindelning enligt SNI.",
   },
   {
-    title: "Hanell Consulting AB - Katalanvägen 4 i Stockholm",
-    urlPath: "https://www.hitta.se › verksamhet",
-    urlSubline: "… › orgnr › befattningshavare",
+    title: "Stumholmens Demo Måleri AB – adress och karta",
+    urlPath: "https://www.hitta.se › karlskrona › verksamhet",
+    urlSubline: "… › orgnr › omdömen",
     source: "Hitta.se",
     snippet:
-      "Hanell Consulting AB är verksam inom konsultverksamhet avseende företagsorganisation och hade 1 anställd under senaste redovisade året.",
+      "Katalogpost med öppettider, vägbeskrivning och omdömesfält. Passar som generisk träff när någon söker målare nära centrum eller hamn.",
   },
   {
-    title: "Hanell VVS & Konsult | Nyköping – ledningar, värme, sanitet",
-    urlPath: "https://www.google.com › maps › place",
-    urlSubline: "… › omdömen › öppettider",
+    title: "Måleri – Karlskrona | Google Maps",
+    urlPath: "https://www.google.com › maps › search",
+    urlSubline: "… › nära dig › öppna nu",
     source: "Google Maps",
     snippet:
-      "Öppettider, omdömen och vägbeskrivning. Kontrollera telefon och adress innan du bokar. Uppdaterade uppgifter om rörmokare och VVS i Nyköping.",
+      "Kartvy med flera markerade firmor. Filtrera på betyg, avstånd och typ av uppdrag innan du ringer eller skickar förfrågan.",
   },
   {
-    title: "Rune Hanell – roller och uppdrag | LinkedIn",
-    urlPath: "https://www.linkedin.com › in › ...",
-    urlSubline: "… › aktivitet › kontakter",
-    source: "LinkedIn",
-    snippet:
-      "Erfarenhet inom teknik, projekt och rådgivning. Se kontakter, kurser och tidigare arbetsgivare i profilen som matchar din sökning.",
-  },
-  {
-    title: "Hanell Entreprenad AB | Företagsinfo & nyckeltal",
-    urlPath: "https://www.proff.se › företag › hanell-entreprenad-ab",
-    urlSubline: "… › styrelse › anställda",
+    title: "Gräsviks Byggteknik AB | Företagsinfo",
+    urlPath: "https://www.proff.se › foretag › grasviks-byggteknik-ab",
+    urlSubline: "… › bokslut › konkursrisk",
     source: "Proff.se",
     snippet:
-      "Omsättning, resultat och styrelse. Jämför liknande bolag i Gävleborgs län. Hämta årsredovisningar och officiella poster.",
+      "Ekonomiska nyckeltal och styrelse för ett fiktivt bygg- och måleribolag. Jämför med branschsnitt i Blekinge.",
   },
   {
-    title: "Rörinstallation & VVS – offert och prisjämförelse",
-    urlPath: "https://www.servicefinder.se › vvs › närke",
-    urlSubline: "… › jämför › offert",
+    title: "Jämför offerter – målare och spackling",
+    urlPath: "https://www.servicefinder.se › malare › blekinge",
+    urlSubline: "… › pris › utan bindning",
     source: "Servicefinder",
     snippet:
-      "Få offerter från certifierade rörmokare. Ange postort och typ av jobb – badrum, värmepump, stambyte. Gratis och utan köpkrav.",
+      "Beskriv yta och önskemål – få svar från flera anslutna firmor. Anonymt tills du väljer att gå vidare.",
   },
   {
-    title: "Anders Rune Hanell – adress, telefon, ålder",
+    title: "Sök person – företagskopplingar och adresser",
     urlPath: "https://www.merinfo.se › person › ...",
-    urlSubline: "… › företagsengagemang › historik",
+    urlSubline: "… › register › historik",
     source: "Merinfo",
     snippet:
-      "Allmänna uppgifter från offentliga källor. Se företagsengagemang och historik där sådana uppgifter finns tillgängliga.",
+      "Generell förklaring av hur personregister kan visa kopplingar till aktiebolag. Inga verkliga personer i denna demosökning.",
   },
   {
-    title: "Hanell Consulting AB | Bolagsordning och firmateckning",
+    title: "Aktiebolag – registrering och verksamhetsbeskrivning",
     urlPath: "https://bolagsverket.se › ... › verksamt",
-    urlSubline: "… › firmateckning › styrelse",
+    urlSubline: "… › snabbval › måleri",
     source: "Bolagsverket / Verksamt",
     snippet:
-      "Registreringsdatum, säte och bolagsform. Styrelse och revisorer enligt senaste inlämnade handlingar.",
+      "Officiell information om bolagsform, firmateckning och branschkoder. Används ofta som andra träff vid sökning på företagsnamn.",
   },
   {
-    title: "VVS-installatörer nära dig – kvalitetssäkrade hantverkare",
-    urlPath: "https://www.vvsforum.se › artikel › ...",
-    urlSubline: "… › checklista › certifikat",
-    source: "VVS Forum",
+    title: "Måla invändigt – råd inför ROT och materialval",
+    urlPath: "https://www.maleribranschen-demo.se › kunskap",
+    urlSubline: "… › miljö › täckskikt",
+    source: "Branschdemo.se",
     snippet:
-      "Branschguide med checklista för beställaren: certifikat, ROT-avdrag, säker arbetsmiljö och garanti på täta stamnät och rörinstallation.",
+      "Checklista: fukt, grundning, val av färgklass och dokumentation för avdrag. Texten är generell och utan koppling till levande bolag.",
   },
   {
-    title: "Recension: jour mot läckage i kylar/skölj - VVS Nyköping",
-    urlPath: "https://www.reco.se › rörmokare › nyköping",
-    urlSubline: "… › omdömen › jämför",
+    title: "Målare i Karlskrona – kundomdömen",
+    urlPath: "https://www.reco.se › malare › karlskrona",
+    urlSubline: "… › jämför › verifierade",
     source: "Reco.se",
     snippet:
-      "Verifierade kundomdömen. Snittbetyg, svarstid på akutjour och prisnivå. Jämför upp till fem företag i samma kategori.",
+      "Sammanställning av betyg, svarstider och återkommande teman i recensioner. Bra för att snabbt jämföra flera lokala alternativ.",
   },
   {
-    title: "Bolagsstämma och ägarstruktur – aktiebolag Stockholm",
+    title: "Kreditupplysning och ägarbild – aktiebolag Blekinge",
     urlPath: "https://www.uc.se › bolagsinformation › ...",
-    urlSubline: "… › ägare › koncern",
+    urlSubline: "… › ägare › borgen",
     source: "UC",
     snippet:
-      "Kreditrating, betalningsanmärkningar och nyckeltal. Översikt över koncern och närstående bolag när sådana finns registrerade.",
+      "Översikt över ekonomisk stabilitet och koncernlänkar när du väljer underleverantör till större målerientreprenad.",
   },
   {
-    title: "Installatörsföretagen – auktoriserade VVS-företag",
-    urlPath: "https://www.if.se › sök › auktoriserad",
-    urlSubline: "… › legitimation › garanti",
-    source: "Installatörsföretagen",
+    title: "Certifierade yrkesgrupper – hantverkarregister (demo)",
+    urlPath: "https://www.yrkesdemo.se › sok › malare",
+    urlSubline: "… › id06 › arbetsmiljö",
+    source: "Yrkesdemo",
     snippet:
-      "Hitta auktoriserat företag med yrkeslegitimation. Säker VVS-installation enligt branschregler och Elsäkerhetsverkets råd.",
+      "Förklarar hur bransch-ID och utbildningsbevis kan styrkas inför byggarbetsplats – generellt innehåll utan verkliga personnummer.",
   },
   {
-    title: "Nyköpings-Tidningen – lokala företag i fokus",
-    urlPath: "https://www.nt.se › näringsliv › ...",
-    urlSubline: "… › företag › reportage",
-    source: "NT.se",
+    title: "Blekinge – reportage om lokala hantverksföretag",
+    urlPath: "https://www.blekinge-demo-tidning.se › naringsliv",
+    urlSubline: "… › karlskrona › småföretag",
+    source: "Blekinge Demo Tidning",
     snippet:
-      "Reportage om regionala satsningar och entreprenörer. Intervjuer med branschprofiler och listor över nystartade bolag.",
+      "Artikelserie om efterfrågan på måleri i skärgårdsnära fastigheter. Intervjuer och statistik är påhittade för videon.",
   },
   {
-    title: "Hanell – träffar på efternamn och adress",
+    title: "Sök namn – koppling till bolag i Karlskrona",
     urlPath: "https://www.ratsit.se › person › ...",
     urlSubline: "… › register › allmän handling",
     source: "Ratsit",
     snippet:
-      "Personinfo och eventuella företagskopplingar. Uppgifterna hämtas från allmänt tillgängliga register enligt gällande lag.",
+      "Visar hur personregister kan länka till styrelseposter. Används ofta som komplement till Allabolag vid företagssökning.",
   },
   {
-    title: "Bolagsinformation och ekonomi – Hanell nära din sökning",
+    title: "Företagssök – måleri och ytbehandling",
     urlPath: "https://www.fortnox.se › foretag › sok › ...",
-    urlSubline: "… › registret › nyckeltal",
+    urlSubline: "… › registret › bransch",
     source: "Fortnox",
     snippet:
-      "Sök bland svenska företag med uppdaterade uppgifter från officiella register. Se omsättning, bolagsform, adress och bokslutsöversikt för liknande namn och org.nr.",
+      "Filtrera på ort, omsättningsintervall och SNI-kod. Resultatlistan är generisk och avsedd som bakgrund i sökresultatet.",
     marginBottomExtraU: 12,
   },
   {
@@ -785,7 +769,11 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
     },
   );
 
-  /** När listan nästan skrollat klart: byt plats på första (Allabolag) och sista (Hantverkskollen) — `GOOGLE_RESULT_SWAP_EARLY_SEC` före scrollens slut. */
+  /**
+   * När listan nästan skrollat klart: byt plats på första (Allabolag) och sista (Hantverkskollen) —
+   * `GOOGLE_RESULT_SWAP_EARLY_SEC` före scrollens slut. Ordning blir [HK, 1, 2, …, n−2, Allabolag],
+   * så index 1 hamnar direkt under HK efter bytet.
+   */
   const nResults = RESULTS.length;
   const resultSwapScrollFrame = Math.max(
     0,
