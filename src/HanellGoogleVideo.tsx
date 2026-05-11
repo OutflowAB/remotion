@@ -190,25 +190,27 @@ const ResultRow: React.FC<ResultRowProps> = ({
   });
 
   const rowPadX = liftCfg
-    ? interpolate(cardT, [0, 1], [padX, 12 * k], {
+    ? interpolate(cardT, [0, 1], [padX, 18 * k], {
         extrapolateLeft: "clamp",
         extrapolateRight: "clamp",
         easing: Easing.out(Easing.cubic),
       })
     : padX;
-  /** Undvik nästan noll padding/radius i början av lyftet — annars ser kortet “ihoptryckt” ut i smala embeds. */
+  /** Vertikal padding i takt med lyftet; slutar mot samma mått som sidorna så kortet får luft upp/ned också. */
   const rowPadY = liftCfg
-    ? interpolate(cardT, [0, 1], [5 * k, 4 * k], {
+    ? interpolate(cardT, [0, 1], [16 * k, 18 * k], {
         extrapolateLeft: "clamp",
         extrapolateRight: "clamp",
         easing: Easing.out(Easing.cubic),
       })
     : 0;
-  const liftCardRadius = liftCfg ? interpolate(cardT, [0, 1], [9 * k, 10 * k], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-    easing: Easing.out(Easing.cubic),
-  }) : 0;
+  const liftCardRadius = liftCfg
+    ? interpolate(cardT, [0, 1], [22 * k, 28 * k], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.out(Easing.cubic),
+      })
+    : 0;
 
   /** Kompensera list-scroll så sista raden sitter kvar; sluta lyfta z-index när kortet är platt och scrollen är klar (undvik “dubbelt kort” mot pagination). */
   const rawScrollCancelY =

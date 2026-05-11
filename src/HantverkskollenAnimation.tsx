@@ -808,16 +808,17 @@ const StaticScene: React.FC<{
   const cardHpx = cardWpx * cardAspect;
   const cardUiScale = cardWpx / 720;
   const rowGap = cardHpx + (tallAspect ? 22 : 14) * k;
-  /** Toppmarginal sedan hjälte och sökfält saknas; undvik överdrag under `NavbarMock` när den visas. */
+  /** Keep the results panel below `NavbarMock` when it is shown. */
   const navbarInsetY = showNavbar ? NAVBAR_BAR_HEIGHT_DESIGN_PX * navbarUiScale : 0;
-  /** Lägre värde = resultatruta högre upp i ramen. */
-  const resultsY = (tallAspect ? 20 : 14) * k + navbarInsetY;
+  const resultsY = navbarInsetY;
   /** Avstånd från resultatrutans topp till första kortets centrum (matchar rubrik + “Sortera” + vertikal padding). */
   const resultsHeaderH = tallAspect ? 146 * k : 112 * k;
   const resultsPanelMarginBottom = (tallAspect ? 34 : 26) * k;
   const firstY = resultsY + resultsHeaderH + resultsPanelMarginBottom + cardHpx / 2;
   /** Extra margin-top for the first result card (Amiralens). */
   const amiralensListCardMarginTop = (tallAspect ? 22 : 18) * k;
+  /** Extra margin-top for the second result card (Skärgårds). */
+  const skargardsListCardMarginTop = (tallAspect ? 24 : 18) * k;
   /** Extra luft ovanför sista listraden (Stumholmens) — motsvarar visuell margin-top. */
   const mariaListCardMarginTop = (tallAspect ? 18 : 14) * k;
   const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length + mariaListCardMarginTop;
@@ -1052,6 +1053,7 @@ const StaticScene: React.FC<{
               landShift +
               (i >= mariaIndex ? mariaShift : 0) +
               (i === 0 ? amiralensListCardMarginTop : 0) +
+              (i === 1 ? skargardsListCardMarginTop : 0) +
               (i === mariaIndex ? mariaListCardMarginTop : 0)
             }
             title={company.title}
@@ -1269,7 +1271,7 @@ const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentF
             panelHeight={rowHeight}
             segmentFrames={segmentFrames}
             startDelayFrames={18}
-            contentStartOffsetYPx={44}
+            contentStartOffsetYPx={18}
           />
         </div>
         <div style={splitPanelBoxStyle}>
