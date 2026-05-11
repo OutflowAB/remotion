@@ -399,12 +399,18 @@ const getFormSubmitClickFrame = (fps: number) => {
   return typingDoneFrame + moveStartDelay + moveDuration + afterArrivalDelay + afterPulseDelay;
 };
 
+/** Kors toning in i grön avslutning (överlappar föregående scen). */
+const CLOSING_CROSSFADE_SECONDS = 0.42;
+export const getClosingCrossfadeFrames = (fps: number) => Math.round(fps * CLOSING_CROSSFADE_SECONDS);
+
 /** Total längd för `HantverkskollenSearchJourney` (intro + split + grön avslutning) vid given fps — håll i synk med `Root`. */
 export function getHantverkskollenSearchJourneyDurationInFrames(fps: number): number {
+  const cross = getClosingCrossfadeFrames(fps);
   return (
     getFormSubmitClickFrame(fps) +
     getHanellGoogleMinDurationFrames(fps, 0.5) +
-    Math.round(fps * 5)
+    Math.round(fps * 5) -
+    cross
   );
 }
 
@@ -413,9 +419,11 @@ export const HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS = 660;
 
 /** Total längd för `HantverkskollenPremium` inkl. 5 s grön avslutning — håll i synk med `Root`. */
 export function getHantverkskollenPremiumDurationInFrames(fps: number): number {
+  const cross = getClosingCrossfadeFrames(fps);
   return (
     Math.round(HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS * (fps / 60)) +
-    Math.round(fps * 5)
+    Math.round(fps * 5) -
+    cross
   );
 }
 
@@ -1263,21 +1271,35 @@ const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentF
  * 2) Premium-lista och Hanell Google i två rader (grid 2×1), var sin panel.
  */
 export const HantverkskollenSearchJourney: React.FC = () => {
+  const absFrame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const introFrames = getFormSubmitClickFrame(fps);
   /** Matchar HanellGoogleVideo: typewriter+lyft+paus+scroll + 0,5 s stilla på slutet. */
   const splitFrames = getHanellGoogleMinDurationFrames(fps, 0.5);
   const closingFrames = Math.round(fps * 5);
+  const crossfade = getClosingCrossfadeFrames(fps);
+  const splitRel = absFrame - introFrames;
+  const splitEndFade = interpolate(
+    splitRel,
+    [Math.max(0, splitFrames - crossfade), splitFrames],
+    [1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.bezier(0.4, 0, 0.2, 1) },
+  );
   return (
     <AbsoluteFill style={{ background: "#0f172a" }}>
       <Sequence durationInFrames={introFrames}>
         <IntroCompanyJoinScene />
       </Sequence>
       <Sequence from={introFrames} durationInFrames={splitFrames}>
-        <SplitGoogleAndFormScene segmentFrames={splitFrames} />
+        <AbsoluteFill style={{ opacity: splitEndFade }}>
+          <SplitGoogleAndFormScene segmentFrames={splitFrames} />
+        </AbsoluteFill>
       </Sequence>
-      <Sequence from={introFrames + splitFrames} durationInFrames={closingFrames}>
-        <PremiumGreenClosingScene />
+      <Sequence
+        from={introFrames + splitFrames - crossfade}
+        durationInFrames={closingFrames + crossfade}
+      >
+        <PremiumGreenClosingScene crossfadeInFrames={crossfade} />
       </Sequence>
     </AbsoluteFill>
   );
@@ -1292,8 +1314,45 @@ const BULLET_CLOSING_ITEMS = [
   "Ökad exponering och starkare förtroende",
 ];
 
-/** Avslutande 5 s: grön bakgrund, fördelar + popularitetsdiagram (referensbilder). */
-const PremiumGreenClosingScene: React.FC = () => {
+/** Mjuk linje genom datapunkter (Catmull-Rom → kubiska Bézier, delare 6 = klassisk “mjuk graf”). */
+function smoothChartPath(pts: ReadonlyArray<{ x: number; y: number }>): string {
+  if (pts.length === 0) return "";
+  if (pts.length === 1) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  const n = pts.length;
+  const get = (i: number) => {
+    if (i < 0) {
+      const a = pts[0];
+      const b = pts[1];
+      return { x: a.x + (a.x - b.x), y: a.y + (a.y - b.y) };
+    }
+    if (i >= n) {
+      const a = pts[n - 2];
+      const b = pts[n - 1];
+      return { x: b.x + (b.x - a.x), y: b.y + (b.y - a.y) };
+    }
+    return pts[i];
+  };
+  const f = (v: number) => v.toFixed(1);
+  let d = `M ${f(pts[0].x)} ${f(pts[0].y)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = get(i - 1);
+    const p1 = get(i);
+    const p2 = get(i + 1);
+    const p3 = get(i + 2);
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${f(cp1x)} ${f(cp1y)} ${f(cp2x)} ${f(cp2y)} ${f(p2.x)} ${f(p2.y)}`;
+  }
+  return d;
+}
+
+/** Avslutande 5 s: grön bakgrund, fördelar + exponeringsdiagram (referensbilder). */
+const PremiumGreenClosingScene: React.FC<{
+  /** När satt: mjukare in-toning (t.ex. kors toning från föregående scen) i stället för kort in-fade. */
+  crossfadeInFrames?: number;
+}> = ({ crossfadeInFrames }) => {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   const tallAspect = height / width >= 1.02;
@@ -1307,7 +1366,11 @@ const PremiumGreenClosingScene: React.FC = () => {
   const deepY = 48 - 20 * Math.cos(t * 0.41);
   const sweepAngle = 148 + 14 * Math.sin(t * 0.38);
   const warmPulse = 0.78 + 0.22 * Math.sin(t * 1.15);
-  const fadeIn = interpolate(frame, [0, Math.round(fps * 0.25)], [0, 1], {
+  const fadeInEnd =
+    crossfadeInFrames != null && crossfadeInFrames > 0
+      ? crossfadeInFrames
+      : Math.round(fps * 0.25);
+  const fadeIn = interpolate(frame, [0, fadeInEnd], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.22, 1, 0.36, 1),
@@ -1325,22 +1388,53 @@ const PremiumGreenClosingScene: React.FC = () => {
   });
 
   const chartMonths = ["Feb", "Apr", "Jun", "Aug", "Okt", "Dec"];
-  /** Normaliserad höjd 0 = topp, 1 = botten (trend enligt referens). */
-  const chartY = [0.34, 0.48, 0.3, 0.4, 0.32, 0.14];
+  /** Grundtrend (samma berättelse som tidigare), sedan fler samplade punkter + svängningar. */
+  const anchorFrac = [0, 0.2, 0.4, 0.6, 0.8, 1];
+  const anchorY = [0.97, 0.92, 0.1, 0.03, 0.52, 0.001];
+  const yFromAnchors = (t: number) => {
+    if (t <= anchorFrac[0]) return anchorY[0];
+    if (t >= anchorFrac[anchorFrac.length - 1]) return anchorY[anchorY.length - 1];
+    let j = 0;
+    while (j < anchorFrac.length - 1 && anchorFrac[j + 1] < t) j++;
+    const t0 = anchorFrac[j];
+    const t1 = anchorFrac[j + 1];
+    const u = (t - t0) / (t1 - t0);
+    return anchorY[j] * (1 - u) + anchorY[j + 1] * u;
+  };
+  const nDense = 28;
+  const chartYDense = Array.from({ length: nDense }, (_, i) => {
+    const t = i / (nDense - 1);
+    const base = yFromAnchors(t);
+    const envelope = Math.sin(t * Math.PI) ** 1.12;
+    const wiggle =
+      envelope *
+      (0.05 * Math.sin(t * Math.PI * 7.5 + 0.35) + 0.032 * Math.sin(t * Math.PI * 13.2 - 0.45));
+    return Math.min(0.99, Math.max(0.012, base + wiggle));
+  });
+  chartYDense[nDense - 1] = anchorY[5];
+
   const chartW = (tallAspect ? Math.min(720 * k, width - 80 * k) : 520 * k);
-  const chartH = 220 * k;
+  const chartH = 360 * k;
   const padX = 44 * k;
   const padY = 36 * k;
   const plotW = chartW - padX * 2;
   const plotH = chartH - padY * 2;
-  const points = chartY.map((yn, i) => {
-    const x = padX + (plotW * i) / (chartY.length - 1);
-    const y = padY + yn * plotH;
+  const nPts = nDense;
+  /** Sista punkten (dec) lite till höger om plotkanten så cirkeln “går utanför sidan”. */
+  const decOutset = 58 * k;
+  const lastPointX = padX + plotW + decOutset;
+  const chartSvgW = Math.max(chartW, lastPointX + 14 * k);
+  /** Dec: redan nära yn=0 — tryck upp centrum nära SVG-taket så sista punkten känns extrem. */
+  const decCenterYMax = 10 * k;
+  const points = chartYDense.map((yn, i) => {
+    const x = i === nPts - 1 ? lastPointX : padX + (plotW * i) / (nPts - 1);
+    const baseY = padY + yn * plotH;
+    const y = i === nPts - 1 ? Math.min(baseY, decCenterYMax) : baseY;
     return { x, y };
   });
-  const pathD = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
-    .join(" ");
+  const pathD = smoothChartPath(points);
+  /** Kortbredd: diagram + padding + extra luft åt sidorna (kapas vid smal viewport). */
+  const chartCardOuterW = Math.min(chartSvgW + 72 * k + 160 * k, width - 80 * k);
 
   return (
     <AbsoluteFill
@@ -1434,6 +1528,7 @@ const PremiumGreenClosingScene: React.FC = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            marginTop: tallAspect ? 40 * k : 32 * k,
             marginBottom: tallAspect ? 32 * k : 28 * k,
             transform: `scale(${0.88 + logoPop * 0.12}) translateY(${(1 - logoPop) * 16 * k}px)`,
             opacity: logoPop,
@@ -1443,23 +1538,13 @@ const PremiumGreenClosingScene: React.FC = () => {
             src={staticFile("logo-green.svg")}
             alt="Hantverkskollen"
             style={{
-              height: (tallAspect ? 48 : 56) * k,
+              marginTop: tallAspect ? 8 * k : 12 * k,
+              height: (tallAspect ? 104 : 128) * k,
               width: "auto",
               display: "block",
               filter:
                 "brightness(0) invert(1) drop-shadow(0 2px 24px rgba(255,122,74,0.25)) drop-shadow(0 8px 40px rgba(0,0,0,0.35))",
               opacity: 0.96,
-            }}
-          />
-          <div
-            style={{
-              marginTop: 14 * k,
-              width: Math.min(420 * k, width * 0.55),
-              height: 2 * k,
-              borderRadius: 2 * k,
-              background:
-                "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), rgba(255,122,74,0.5), rgba(255,255,255,0.35), transparent)",
-              opacity: 0.5 + Math.sin(t * 1.4) * 0.2,
             }}
           />
         </div>
@@ -1470,17 +1555,17 @@ const PremiumGreenClosingScene: React.FC = () => {
             minHeight: 0,
             display: "flex",
             flexDirection: tallAspect ? "column" : "row",
-            alignItems: tallAspect ? "stretch" : "center",
+            alignItems: "center",
             justifyContent: "center",
             gap: tallAspect ? 36 * k : 56 * k,
           }}
         >
         <div
           style={{
-            flex: tallAspect ? "0 0 auto" : "1 1 0",
-            width: tallAspect ? "100%" : undefined,
+            flex: "0 0 auto",
+            width: tallAspect ? Math.min(640 * k, width - 96 * k) : undefined,
             minWidth: 0,
-            maxWidth: tallAspect ? "100%" : 980 * k,
+            maxWidth: tallAspect ? Math.min(640 * k, width - 96 * k) : 980 * k,
           }}
         >
           <div
@@ -1517,8 +1602,6 @@ const PremiumGreenClosingScene: React.FC = () => {
                     style={{
                       width: 38 * k,
                       height: 38 * k,
-                      borderRadius: 999,
-                      background: "#f08c5e",
                       flexShrink: 0,
                       display: "flex",
                       alignItems: "center",
@@ -1526,12 +1609,25 @@ const PremiumGreenClosingScene: React.FC = () => {
                       marginTop: 2 * k,
                     }}
                   >
-                    <svg width={18 * k} height={14 * k} viewBox="0 0 18 14" aria-hidden>
+                    <svg
+                      width={38 * k}
+                      height={38 * k}
+                      viewBox="0 0 40 40"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <circle
+                        cx={20}
+                        cy={20}
+                        r={16.25}
+                        stroke="#f08c5e"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                      />
                       <path
-                        d="M1 7 L6.5 12.5 L17 1.5"
-                        fill="none"
-                        stroke="#ffffff"
-                        strokeWidth="2.2"
+                        d="M11.5 20.5 L17.8 27.2 L29.2 12.8"
+                        stroke="#f08c5e"
+                        strokeWidth={2.35}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
@@ -1557,8 +1653,9 @@ const PremiumGreenClosingScene: React.FC = () => {
         <div
           style={{
             flex: "0 0 auto",
-            width: tallAspect ? "100%" : chartW + 80 * k,
-            maxWidth: tallAspect ? 720 * k : undefined,
+            alignSelf: "center",
+            marginTop: tallAspect ? 36 * k : 28 * k,
+            width: chartCardOuterW,
             borderRadius: 20 * k,
             background: "#f8f9f5",
             border: `${1 * k}px solid rgba(51, 70, 48, 0.12)`,
@@ -1574,9 +1671,10 @@ const PremiumGreenClosingScene: React.FC = () => {
               color: "#2d4a32",
               marginBottom: 8 * k,
               letterSpacing: -0.03,
+              textAlign: "center",
             }}
           >
-            Paketets popularitet
+            Exponering för ert företag
           </div>
           <div
             style={{
@@ -1585,23 +1683,27 @@ const PremiumGreenClosingScene: React.FC = () => {
               color: "#5c6560",
               marginBottom: 24 * k,
               lineHeight: 1.4,
+              textAlign: "center",
             }}
           >
-            Månadstrend över personer som överväger paketet.
+            Månadstrend för hur många som ser er profil och ert varumärke på Hantverkskollen.
           </div>
           <div
             style={{
               height: 2 * k,
               background: "rgba(51, 70, 48, 0.1)",
               marginBottom: 20 * k,
+              marginLeft: "auto",
+              marginRight: "auto",
+              maxWidth: chartSvgW,
             }}
           />
           <svg
-            width={chartW}
+            width={chartSvgW}
             height={chartH}
-            viewBox={`0 0 ${chartW} ${chartH}`}
-            style={{ display: "block" }}
-            aria-label="Linjediagram"
+            viewBox={`0 0 ${chartSvgW} ${chartH}`}
+            style={{ display: "block", overflow: "visible", marginLeft: "auto", marginRight: "auto" }}
+            aria-label="Linjediagram: exponering över året"
           >
             {[0.25, 0.5, 0.75].map((gy) => (
               <line
@@ -1618,29 +1720,29 @@ const PremiumGreenClosingScene: React.FC = () => {
               d={pathD}
               fill="none"
               stroke="#f08c5e"
-              strokeWidth={3.2 * k}
+              strokeWidth={5 * k}
               strokeLinecap="round"
               strokeLinejoin="round"
               pathLength={1}
               strokeDasharray={1}
               strokeDashoffset={1 - lineDraw}
             />
-            {points.map((p) => (
+            {points.map((p, i) => (
               <circle
-                key={`${p.x}-${p.y}`}
+                key={`${i}-${p.x.toFixed(0)}`}
                 cx={p.x}
                 cy={p.y}
-                r={4.5 * k}
+                r={i === nPts - 1 ? 4.2 * k : 3 * k}
                 fill="#ffffff"
                 stroke="#f08c5e"
-                strokeWidth={2 * k}
+                strokeWidth={i === nPts - 1 ? 1.85 * k : 1.35 * k}
                 opacity={lineDraw}
               />
             ))}
             {chartMonths.map((label, i) => (
               <text
                 key={label}
-                x={padX + (plotW * i) / (chartMonths.length - 1)}
+                x={i === chartMonths.length - 1 ? points[nPts - 1].x : padX + (plotW * i) / (chartMonths.length - 1)}
                 y={chartH - 8 * k}
                 textAnchor="middle"
                 fill="#5c6560"
@@ -1665,6 +1767,7 @@ const HantverkskollenWithIntro: React.FC = () => {
   const mainSegmentFrames = Math.round(HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS * (fps / 60));
   const closingFrames = Math.round(fps * 5);
   const transitionFrames = Math.round(fps * 0.35);
+  const closingCrossfade = getClosingCrossfadeFrames(fps);
   const introOpacity = interpolate(frame, [introFrames - transitionFrames, introFrames], [1, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
@@ -1675,12 +1778,19 @@ const HantverkskollenWithIntro: React.FC = () => {
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
+  const mainToClosingOpacity = interpolate(
+    frame,
+    [mainSegmentFrames - closingCrossfade, mainSegmentFrames],
+    [1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.bezier(0.4, 0, 0.2, 1) },
+  );
+  const mainLayerOpacity = mainOpacity * mainToClosingOpacity;
 
   return (
     <AbsoluteFill>
       <Sequence durationInFrames={mainSegmentFrames}>
         <AbsoluteFill>
-          <div style={{ position: "absolute", inset: 0, opacity: mainOpacity }}>
+          <div style={{ position: "absolute", inset: 0, opacity: mainLayerOpacity }}>
             <StaticScene
               frameOffset={introFrames}
               showNavbar
@@ -1692,8 +1802,11 @@ const HantverkskollenWithIntro: React.FC = () => {
           </div>
         </AbsoluteFill>
       </Sequence>
-      <Sequence from={mainSegmentFrames} durationInFrames={closingFrames}>
-        <PremiumGreenClosingScene />
+      <Sequence
+        from={mainSegmentFrames - closingCrossfade}
+        durationInFrames={closingFrames + closingCrossfade}
+      >
+        <PremiumGreenClosingScene crossfadeInFrames={closingCrossfade} />
       </Sequence>
     </AbsoluteFill>
   );
