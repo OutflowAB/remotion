@@ -550,7 +550,44 @@ const IntroCompanyJoinScene: React.FC<{
     (typedQuery.length >= fullQuery.length ? 1 : 0) +
     (typedOrgNumber.length >= fullOrgNumber.length ? 1 : 0) +
     (typedContactName.length >= fullContactName.length ? 1 : 0);
-  const formProgress = completedFields / 3;
+  /** Frame-synkad fyllning (samma ~220 ms som tidigare CSS-transition, men utan tidsbaserad transition som strular vid Remotion-export). */
+  const progressBarTransitionFrames = Math.max(1, Math.round(fps * 0.22));
+  const nameDoneFrame = startTypingFrame + nameTypingFrames;
+  const orgDoneFrame = orgTypingStartFrame + orgTypingFrames;
+  const contactDoneFrame =
+    contactTypingStartFrame + Math.ceil(fullContactName.length / charsPerFrame);
+  const barEase = Easing.out(Easing.cubic);
+  let formBarProgress = 0;
+  if (frame < nameDoneFrame) {
+    formBarProgress = 0;
+  } else if (frame < nameDoneFrame + progressBarTransitionFrames) {
+    formBarProgress = interpolate(
+      frame,
+      [nameDoneFrame, nameDoneFrame + progressBarTransitionFrames],
+      [0, 1 / 3],
+      { easing: barEase, extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+    );
+  } else if (frame < orgDoneFrame) {
+    formBarProgress = 1 / 3;
+  } else if (frame < orgDoneFrame + progressBarTransitionFrames) {
+    formBarProgress = interpolate(
+      frame,
+      [orgDoneFrame, orgDoneFrame + progressBarTransitionFrames],
+      [1 / 3, 2 / 3],
+      { easing: barEase, extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+    );
+  } else if (frame < contactDoneFrame) {
+    formBarProgress = 2 / 3;
+  } else if (frame < contactDoneFrame + progressBarTransitionFrames) {
+    formBarProgress = interpolate(
+      frame,
+      [contactDoneFrame, contactDoneFrame + progressBarTransitionFrames],
+      [2 / 3, 1],
+      { easing: barEase, extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+    );
+  } else {
+    formBarProgress = 1;
+  }
   const typingDoneFrame = contactTypingStartFrame + Math.ceil(fullContactName.length / charsPerFrame);
   const isFormComplete = completedFields === 3;
   const moveToButtonStartFrame = typingDoneFrame + Math.round(fps * FORM_DELAY_BEFORE_MOVE_SECONDS);
@@ -673,11 +710,10 @@ const IntroCompanyJoinScene: React.FC<{
         >
           <div
             style={{
-              width: `${formProgress * 100}%`,
+              width: `${formBarProgress * 100}%`,
               height: "100%",
               borderRadius: 999,
               background: "#f97316",
-              transition: "width 220ms ease-out",
             }}
           />
         </div>
