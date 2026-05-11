@@ -403,7 +403,7 @@ const getFormSubmitClickFrame = (fps: number) => {
 export function getHantverkskollenSearchJourneyDurationInFrames(fps: number): number {
   return (
     getFormSubmitClickFrame(fps) +
-    getHanellGoogleMinDurationFrames(fps, 2) +
+    getHanellGoogleMinDurationFrames(fps, 0.5) +
     Math.round(fps * 5)
   );
 }
@@ -1265,8 +1265,8 @@ const SplitGoogleAndFormScene: React.FC<{ segmentFrames: number }> = ({ segmentF
 export const HantverkskollenSearchJourney: React.FC = () => {
   const { fps } = useVideoConfig();
   const introFrames = getFormSubmitClickFrame(fps);
-  /** Matchar HanellGoogleVideo: typewriter+lyft+paus+scroll + 2 s stilla på slutet. */
-  const splitFrames = getHanellGoogleMinDurationFrames(fps, 2);
+  /** Matchar HanellGoogleVideo: typewriter+lyft+paus+scroll + 0,5 s stilla på slutet. */
+  const splitFrames = getHanellGoogleMinDurationFrames(fps, 0.5);
   const closingFrames = Math.round(fps * 5);
   return (
     <AbsoluteFill style={{ background: "#0f172a" }}>
