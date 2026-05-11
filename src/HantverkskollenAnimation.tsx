@@ -1298,10 +1298,25 @@ const PremiumGreenClosingScene: React.FC = () => {
   const { width, height, fps } = useVideoConfig();
   const tallAspect = height / width >= 1.02;
   const k = tallAspect ? width / 1280 : Math.min(width / 1920, height / 1080);
+  const t = frame / fps;
+  const warmX = 48 + 32 * Math.sin(t * 0.72);
+  const warmY = 42 + 26 * Math.cos(t * 0.58);
+  const coolX = 52 - 30 * Math.cos(t * 0.64);
+  const coolY = 55 + 28 * Math.sin(t * 0.48);
+  const deepX = 50 + 18 * Math.sin(t * 0.35 + 1.1);
+  const deepY = 48 - 20 * Math.cos(t * 0.41);
+  const sweepAngle = 148 + 14 * Math.sin(t * 0.38);
+  const warmPulse = 0.78 + 0.22 * Math.sin(t * 1.15);
   const fadeIn = interpolate(frame, [0, Math.round(fps * 0.25)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.bezier(0.22, 1, 0.36, 1),
+  });
+  const logoPop = spring({
+    frame,
+    fps,
+    config: { damping: 22, stiffness: 140, mass: 0.85 },
+    durationInFrames: Math.round(fps * 0.45),
   });
   const lineDraw = interpolate(frame, [Math.round(fps * 0.35), Math.round(fps * 2.2)], [0, 1], {
     extrapolateLeft: "clamp",
@@ -1330,27 +1345,136 @@ const PremiumGreenClosingScene: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
-        background: "linear-gradient(165deg, #2a3d30 0%, #243528 48%, #1a2620 100%)",
+        background: "#0f1812",
         fontFamily: "Inter, system-ui, sans-serif",
         opacity: fadeIn,
+        overflow: "hidden",
       }}
     >
+      {/* Animerad gradientbakgrund */}
       <div
         style={{
           position: "absolute",
           inset: 0,
+          background: `linear-gradient(${sweepAngle}deg, #1b2e22 0%, #152018 38%, #0d1510 100%)`,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: "135%",
+          height: "135%",
+          left: "-17%",
+          top: "-17%",
+          opacity: warmPulse,
+          background: `radial-gradient(ellipse 58% 52% at ${warmX}% ${warmY}%, rgba(255, 122, 74, 0.32) 0%, transparent 58%)`,
+          transform: `translate(${Math.sin(t * 0.88) * 2.5}%, ${Math.cos(t * 0.62) * 2}%) scale(${1 + Math.sin(t * 0.5) * 0.02})`,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: "128%",
+          height: "128%",
+          left: "-14%",
+          top: "-14%",
+          opacity: 0.82 + 0.18 * Math.sin(t * 0.95 + 0.5),
+          background: `radial-gradient(ellipse 52% 48% at ${coolX}% ${coolY}%, rgba(120, 168, 115, 0.26) 0%, transparent 55%)`,
+          transform: `translate(${-Math.cos(t * 0.75) * 3}%, ${Math.sin(t * 0.52) * 2.5}%)`,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          width: "115%",
+          height: "115%",
+          left: "-7%",
+          top: "-7%",
+          opacity: 0.75,
+          background: `radial-gradient(ellipse 70% 55% at ${deepX}% ${deepY}%, rgba(40, 58, 42, 0.7) 0%, transparent 50%)`,
+          transform: `translate(${Math.sin(t * 0.33) * 2}%, ${Math.cos(t * 0.29) * 2.5}%)`,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `linear-gradient(${125 + Math.sin(t * 0.55) * 8}deg, rgba(255,255,255,0.05) 0%, transparent 40%, rgba(255,122,74,0.08) 100%)`,
+          mixBlendMode: "overlay",
+          opacity: 0.72 + Math.sin(t * 0.9) * 0.18,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 35%, rgba(0,0,0,0.45) 100%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
           display: "flex",
-          flexDirection: tallAspect ? "column" : "row",
-          alignItems: "center",
+          flexDirection: "column",
+          alignItems: "stretch",
           justifyContent: "center",
-          gap: tallAspect ? 40 * k : 72 * k,
-          paddingLeft: tallAspect ? 48 * k : 100 * k,
-          paddingRight: tallAspect ? 48 * k : 100 * k,
-          paddingTop: tallAspect ? 36 * k : 0,
-          paddingBottom: tallAspect ? 36 * k : 0,
+          paddingLeft: tallAspect ? 48 * k : 72 * k,
+          paddingRight: tallAspect ? 48 * k : 72 * k,
+          paddingTop: tallAspect ? 28 * k : 36 * k,
+          paddingBottom: tallAspect ? 32 * k : 40 * k,
           boxSizing: "border-box",
         }}
       >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            marginBottom: tallAspect ? 32 * k : 28 * k,
+            transform: `scale(${0.88 + logoPop * 0.12}) translateY(${(1 - logoPop) * 16 * k}px)`,
+            opacity: logoPop,
+          }}
+        >
+          <Img
+            src={staticFile("logo-green.svg")}
+            alt="Hantverkskollen"
+            style={{
+              height: (tallAspect ? 48 : 56) * k,
+              width: "auto",
+              display: "block",
+              filter:
+                "brightness(0) invert(1) drop-shadow(0 2px 24px rgba(255,122,74,0.25)) drop-shadow(0 8px 40px rgba(0,0,0,0.35))",
+              opacity: 0.96,
+            }}
+          />
+          <div
+            style={{
+              marginTop: 14 * k,
+              width: Math.min(420 * k, width * 0.55),
+              height: 2 * k,
+              borderRadius: 2 * k,
+              background:
+                "linear-gradient(90deg, transparent, rgba(255,255,255,0.35), rgba(255,122,74,0.5), rgba(255,255,255,0.35), transparent)",
+              opacity: 0.5 + Math.sin(t * 1.4) * 0.2,
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: tallAspect ? "column" : "row",
+            alignItems: tallAspect ? "stretch" : "center",
+            justifyContent: "center",
+            gap: tallAspect ? 36 * k : 56 * k,
+          }}
+        >
         <div
           style={{
             flex: tallAspect ? "0 0 auto" : "1 1 0",
@@ -1363,9 +1487,10 @@ const PremiumGreenClosingScene: React.FC = () => {
             style={{
               width: "100%",
               height: 3 * k,
-              background: "rgba(255,255,255,0.22)",
+              background: "linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.28), rgba(255,122,74,0.35), rgba(255,255,255,0.2))",
               borderRadius: 2 * k,
-              marginBottom: 36 * k,
+              marginBottom: 28 * k,
+              opacity: 0.85 + Math.sin(t * 1.8) * 0.1,
             }}
           />
           <div style={{ display: "flex", flexDirection: "column", gap: 22 * k }}>
@@ -1478,13 +1603,13 @@ const PremiumGreenClosingScene: React.FC = () => {
             style={{ display: "block" }}
             aria-label="Linjediagram"
           >
-            {[0.25, 0.5, 0.75].map((t) => (
+            {[0.25, 0.5, 0.75].map((gy) => (
               <line
-                key={t}
+                key={gy}
                 x1={padX}
                 x2={chartW - padX}
-                y1={padY + t * plotH}
-                y2={padY + t * plotH}
+                y1={padY + gy * plotH}
+                y2={padY + gy * plotH}
                 stroke="rgba(0,0,0,0.06)"
                 strokeWidth={1 * k}
               />
@@ -1525,6 +1650,7 @@ const PremiumGreenClosingScene: React.FC = () => {
               </text>
             ))}
           </svg>
+        </div>
         </div>
       </div>
     </AbsoluteFill>
