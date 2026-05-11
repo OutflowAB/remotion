@@ -23,6 +23,9 @@ import {
 } from "lucide-react";
 import { getHanellGoogleMinDurationFrames, HanellGoogleVideo } from "./HanellGoogleVideo";
 
+/** Stilla efter Hanell Google-scroll i split-scen innan grön avslutning (synkad med `getHanellGoogleMinDurationFrames` sista argument). */
+const HANTVERKSKOLLEN_SPLIT_HANELL_END_HOLD_SEC = 0.8;
+
 type CardProps = {
   x: number;
   y: number;
@@ -411,7 +414,7 @@ export function getHantverkskollenSearchJourneyDurationInFrames(fps: number): nu
   const cross = getClosingCrossfadeFrames(fps);
   return (
     getFormSubmitClickFrame(fps) +
-    getHanellGoogleMinDurationFrames(fps, 0.5) +
+    getHanellGoogleMinDurationFrames(fps, HANTVERKSKOLLEN_SPLIT_HANELL_END_HOLD_SEC) +
     Math.round(fps * 5) -
     cross
   );
@@ -1290,8 +1293,8 @@ export const HantverkskollenSearchJourney: React.FC = () => {
   const absFrame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const introFrames = getFormSubmitClickFrame(fps);
-  /** Matchar HanellGoogleVideo: typewriter+lyft+paus+scroll + 0,5 s stilla på slutet. */
-  const splitFrames = getHanellGoogleMinDurationFrames(fps, 0.5);
+  /** Matchar HanellGoogleVideo: typewriter+lyft+paus+scroll + stilla på slutet (`HANTVERKSKOLLEN_SPLIT_HANELL_END_HOLD_SEC`). */
+  const splitFrames = getHanellGoogleMinDurationFrames(fps, HANTVERKSKOLLEN_SPLIT_HANELL_END_HOLD_SEC);
   const closingFrames = Math.round(fps * 5);
   const crossfade = getClosingCrossfadeFrames(fps);
   const splitRel = absFrame - introFrames;
