@@ -95,7 +95,7 @@ const HantverkskollenLogo: React.FC<{ width: number; height: number }> = ({ widt
 };
 
 /** Design height for `NavbarMock` (px before `uiScale`); även start-offset för lista under baren i `StaticScene`. */
-const NAVBAR_BAR_HEIGHT_DESIGN_PX = 104;
+const NAVBAR_BAR_HEIGHT_DESIGN_PX = 86;
 /** Same factor as `IntroCompanyJoinScene` (`width / 900`) so the navbar matches the first scene everywhere. */
 const NAVBAR_UI_SCALE_DIVISOR = 900;
 
@@ -110,6 +110,7 @@ const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
         height: NAVBAR_BAR_HEIGHT_DESIGN_PX * uiScale,
         display: "flex",
         justifyContent: "center",
+        alignItems: "center",
         background: "rgba(255, 255, 255, 0.4)",
         backdropFilter: "blur(30px) saturate(200%)",
         WebkitBackdropFilter: "blur(30px) saturate(200%)",
@@ -309,6 +310,8 @@ const Card: React.FC<CardProps> = ({
         style={{
           width: 200 * uiScale,
           borderLeft: `${1 * uiScale}px solid #d1d5db`,
+          borderTopRightRadius: 12 * uiScale,
+          borderBottomRightRadius: 12 * uiScale,
           background: "#f3f4f6",
           padding: `${16 * uiScale}px`,
           display: "flex",
@@ -811,10 +814,12 @@ const StaticScene: React.FC<{
   const resultsY = (tallAspect ? 20 : 14) * k + navbarInsetY;
   /** Avstånd från resultatrutans topp till första kortets centrum (matchar rubrik + “Sortera” + vertikal padding). */
   const resultsHeaderH = tallAspect ? 146 * k : 112 * k;
-  const resultsPanelMarginBottom = (tallAspect ? 20 : 16) * k;
+  const resultsPanelMarginBottom = (tallAspect ? 34 : 26) * k;
   const firstY = resultsY + resultsHeaderH + resultsPanelMarginBottom + cardHpx / 2;
+  /** Extra margin-top for the first result card (Amiralens). */
+  const amiralensListCardMarginTop = (tallAspect ? 22 : 18) * k;
   /** Extra luft ovanför sista listraden (Stumholmens) — motsvarar visuell margin-top. */
-  const mariaListCardMarginTop = (tallAspect ? 34 : 26) * k;
+  const mariaListCardMarginTop = (tallAspect ? 18 : 14) * k;
   const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length + mariaListCardMarginTop;
   /** Space below the pagination bar so it isn’t flush with the scroll/content edge. */
   const paginationMarginBottom = (tallAspect ? 500 : 370) * k;
@@ -894,7 +899,7 @@ const StaticScene: React.FC<{
     easing: Easing.bezier(0.22, 1, 0.36, 1),
   });
   const insertedCardY = interpolate(landProgress, [0, 1], [fixedContainerY, firstY]);
-  const insertedCardMarginTop = (tallAspect ? 20 : 16) * k;
+  const insertedCardMarginTop = (tallAspect ? 10 : 8) * k;
   const insertedCardYWithMargin = insertedCardY + insertedCardMarginTop;
   const insertedPopScale = interpolate(popIn, [0, 1], [0.88, 1]);
   const insertedPromoteScale = interpolate(frame, [liftStartFrame, liftEndFrame], [1, 1.08], {
@@ -1046,6 +1051,7 @@ const StaticScene: React.FC<{
               rowGap * i +
               landShift +
               (i >= mariaIndex ? mariaShift : 0) +
+              (i === 0 ? amiralensListCardMarginTop : 0) +
               (i === mariaIndex ? mariaListCardMarginTop : 0)
             }
             title={company.title}
