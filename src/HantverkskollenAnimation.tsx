@@ -813,7 +813,9 @@ const StaticScene: React.FC<{
   const resultsHeaderH = tallAspect ? 146 * k : 112 * k;
   const resultsPanelMarginBottom = (tallAspect ? 20 : 16) * k;
   const firstY = resultsY + resultsHeaderH + resultsPanelMarginBottom + cardHpx / 2;
-  const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length;
+  /** Extra luft ovanför sista listraden (Stumholmens) — motsvarar visuell margin-top. */
+  const mariaListCardMarginTop = (tallAspect ? 34 : 26) * k;
+  const lastCardBottom = firstY + cardHpx / 2 + rowGap * COMPANIES.length + mariaListCardMarginTop;
   /** Space below the pagination bar so it isn’t flush with the scroll/content edge. */
   const paginationMarginBottom = (tallAspect ? 500 : 370) * k;
   const contentHeight = lastCardBottom + 60 * k + paginationMarginBottom;
@@ -921,7 +923,7 @@ const StaticScene: React.FC<{
   });
   const underCardOpacity = 1;
   const underCardExtraY = 0;
-  const bottomCardY = firstY + rowGap * mariaIndex + landShift + mariaShift;
+  const bottomCardY = firstY + rowGap * mariaIndex + landShift + mariaShift + mariaListCardMarginTop;
   const paginationGap = 10 * k;
   const paginationTop = bottomCardY + cardHpx / 2 + paginationGap;
 
@@ -1039,7 +1041,13 @@ const StaticScene: React.FC<{
           <Card
             key={company.title}
             x={listX}
-            y={firstY + rowGap * i + landShift + (i >= mariaIndex ? mariaShift : 0)}
+            y={
+              firstY +
+              rowGap * i +
+              landShift +
+              (i >= mariaIndex ? mariaShift : 0) +
+              (i === mariaIndex ? mariaListCardMarginTop : 0)
+            }
             title={company.title}
             subtitle={company.subtitle}
             price={company.price}
@@ -1358,14 +1366,14 @@ const PremiumGreenClosingScene: React.FC<{
   const tallAspect = height / width >= 1.02;
   const k = tallAspect ? width / 1280 : Math.min(width / 1920, height / 1080);
   const t = frame / fps;
-  const warmX = 48 + 32 * Math.sin(t * 0.72);
-  const warmY = 42 + 26 * Math.cos(t * 0.58);
-  const coolX = 52 - 30 * Math.cos(t * 0.64);
-  const coolY = 55 + 28 * Math.sin(t * 0.48);
-  const deepX = 50 + 18 * Math.sin(t * 0.35 + 1.1);
-  const deepY = 48 - 20 * Math.cos(t * 0.41);
-  const sweepAngle = 148 + 14 * Math.sin(t * 0.38);
-  const warmPulse = 0.78 + 0.22 * Math.sin(t * 1.15);
+  const warmX = 48 + 40 * Math.sin(t * 1.08);
+  const warmY = 42 + 34 * Math.cos(t * 0.95);
+  const coolX = 52 - 38 * Math.cos(t * 1.02);
+  const coolY = 55 + 34 * Math.sin(t * 0.82);
+  const deepX = 50 + 26 * Math.sin(t * 0.55 + 1.1);
+  const deepY = 48 - 28 * Math.cos(t * 0.68);
+  const sweepAngle = 148 + 28 * Math.sin(t * 0.62);
+  const warmPulse = 0.68 + 0.32 * Math.sin(t * 1.52);
   const fadeInEnd =
     crossfadeInFrames != null && crossfadeInFrames > 0
       ? crossfadeInFrames
@@ -1412,6 +1420,10 @@ const PremiumGreenClosingScene: React.FC<{
     return Math.min(0.99, Math.max(0.012, base + wiggle));
   });
   chartYDense[nDense - 1] = anchorY[5];
+  /** Punkt före dec (circle[26]): sänk något så sista segmentet inte “skjuter” lika brant upp. */
+  chartYDense[nDense - 2] = Math.min(0.96, chartYDense[nDense - 2] + 0.16);
+  /** circle[8]: höj något (lägre yn → högre upp i diagrammet). */
+  chartYDense[8] = Math.max(0.02, chartYDense[8] - 0.065);
 
   const chartW = (tallAspect ? Math.min(720 * k, width - 80 * k) : 520 * k);
   const chartH = 360 * k;
@@ -1424,15 +1436,26 @@ const PremiumGreenClosingScene: React.FC<{
   const decOutset = 58 * k;
   const lastPointX = padX + plotW + decOutset;
   const chartSvgW = Math.max(chartW, lastPointX + 14 * k);
-  /** Dec: redan nära yn=0 — tryck upp centrum nära SVG-taket så sista punkten känns extrem. */
-  const decCenterYMax = 10 * k;
+  /** Dec-cirkel (sista punkten): så hög som möjligt + extra viewBox uppåt så toppen får sticka upp. */
+  const decCircleR = 4.2 * k;
+  const decCircleStroke = 1.85 * k;
+  const chartSvgExtendTop = 40 * k;
+  const chartSvgViewH = chartH + chartSvgExtendTop;
+  const decCyPinned = Math.max(0.5 * k, decCircleR * 0.35 + decCircleStroke * 0.25);
+  const penultimateXShift = 22 * k;
   const points = chartYDense.map((yn, i) => {
-    const x = i === nPts - 1 ? lastPointX : padX + (plotW * i) / (nPts - 1);
+    const baseX = i === nPts - 1 ? lastPointX : padX + (plotW * i) / (nPts - 1);
+    const x = i === nPts - 2 ? baseX + penultimateXShift : baseX;
     const baseY = padY + yn * plotH;
-    const y = i === nPts - 1 ? Math.min(baseY, decCenterYMax) : baseY;
+    const y = i === nPts - 1 ? Math.min(baseY, decCyPinned) : baseY;
     return { x, y };
   });
   const pathD = smoothChartPath(points);
+  /** Jämnt avstånd mellan månadsetiketter längs hela axeln (feb … dec vid sista punktens x). */
+  const monthLabelSpan = lastPointX - padX;
+  const monthLabelXs = chartMonths.map(
+    (_, i) => padX + (monthLabelSpan * i) / (chartMonths.length - 1),
+  );
   /** Kortbredd: diagram + padding + extra luft åt sidorna (kapas vid smal viewport). */
   const chartCardOuterW = Math.min(chartSvgW + 72 * k + 160 * k, width - 80 * k);
 
@@ -1461,8 +1484,8 @@ const PremiumGreenClosingScene: React.FC<{
           left: "-17%",
           top: "-17%",
           opacity: warmPulse,
-          background: `radial-gradient(ellipse 58% 52% at ${warmX}% ${warmY}%, rgba(255, 122, 74, 0.32) 0%, transparent 58%)`,
-          transform: `translate(${Math.sin(t * 0.88) * 2.5}%, ${Math.cos(t * 0.62) * 2}%) scale(${1 + Math.sin(t * 0.5) * 0.02})`,
+          background: `radial-gradient(ellipse 58% 52% at ${warmX}% ${warmY}%, rgba(255, 122, 74, 0.36) 0%, transparent 58%)`,
+          transform: `translate(${Math.sin(t * 1.15) * 4.2}%, ${Math.cos(t * 0.92) * 3.6}%) scale(${1 + Math.sin(t * 0.78) * 0.04})`,
         }}
       />
       <div
@@ -1472,9 +1495,9 @@ const PremiumGreenClosingScene: React.FC<{
           height: "128%",
           left: "-14%",
           top: "-14%",
-          opacity: 0.82 + 0.18 * Math.sin(t * 0.95 + 0.5),
-          background: `radial-gradient(ellipse 52% 48% at ${coolX}% ${coolY}%, rgba(120, 168, 115, 0.26) 0%, transparent 55%)`,
-          transform: `translate(${-Math.cos(t * 0.75) * 3}%, ${Math.sin(t * 0.52) * 2.5}%)`,
+          opacity: 0.76 + 0.24 * Math.sin(t * 1.28 + 0.5),
+          background: `radial-gradient(ellipse 52% 48% at ${coolX}% ${coolY}%, rgba(120, 168, 115, 0.3) 0%, transparent 55%)`,
+          transform: `translate(${-Math.cos(t * 1.02) * 4.8}%, ${Math.sin(t * 0.88) * 4}%)`,
         }}
       />
       <div
@@ -1484,18 +1507,18 @@ const PremiumGreenClosingScene: React.FC<{
           height: "115%",
           left: "-7%",
           top: "-7%",
-          opacity: 0.75,
-          background: `radial-gradient(ellipse 70% 55% at ${deepX}% ${deepY}%, rgba(40, 58, 42, 0.7) 0%, transparent 50%)`,
-          transform: `translate(${Math.sin(t * 0.33) * 2}%, ${Math.cos(t * 0.29) * 2.5}%)`,
+          opacity: 0.62 + 0.3 * Math.sin(t * 0.88),
+          background: `radial-gradient(ellipse 70% 55% at ${deepX}% ${deepY}%, rgba(40, 58, 42, 0.72) 0%, transparent 50%)`,
+          transform: `translate(${Math.sin(t * 0.52) * 3.4}%, ${Math.cos(t * 0.48) * 4}%)`,
         }}
       />
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: `linear-gradient(${125 + Math.sin(t * 0.55) * 8}deg, rgba(255,255,255,0.05) 0%, transparent 40%, rgba(255,122,74,0.08) 100%)`,
+          background: `linear-gradient(${125 + Math.sin(t * 0.82) * 16}deg, rgba(255,255,255,0.06) 0%, transparent 38%, rgba(255,122,74,0.11) 100%)`,
           mixBlendMode: "overlay",
-          opacity: 0.72 + Math.sin(t * 0.9) * 0.18,
+          opacity: 0.62 + Math.sin(t * 1.18) * 0.26,
         }}
       />
       <div
@@ -1504,6 +1527,7 @@ const PremiumGreenClosingScene: React.FC<{
           inset: 0,
           background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent 35%, rgba(0,0,0,0.45) 100%)",
           pointerEvents: "none",
+          opacity: 0.9 + 0.1 * Math.sin(t * 0.72),
         }}
       />
 
@@ -1580,12 +1604,27 @@ const PremiumGreenClosingScene: React.FC<{
           />
           <div style={{ display: "flex", flexDirection: "column", gap: 22 * k }}>
             {BULLET_CLOSING_ITEMS.map((text, idx) => {
-              const stagger = interpolate(
-                frame,
-                [8 + idx * 4, 22 + idx * 4],
-                [0, 1],
-                { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-              );
+              const typeStart = Math.round(fps * 0.1) + idx * Math.round(fps * 0.24);
+              const typeDur = Math.max(Math.round(fps * 0.2), Math.round((text.length / 15) * fps));
+              const typeEnd = typeStart + typeDur;
+              const typeProgress = interpolate(frame, [typeStart, typeEnd], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+                easing: Easing.linear,
+              });
+              const nVisible = Math.min(text.length, Math.round(typeProgress * text.length));
+              const visibleText = text.slice(0, nVisible);
+              const rowIn = interpolate(frame, [typeStart - 6, typeStart + 14], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+                easing: Easing.bezier(0.22, 1, 0.36, 1),
+              });
+              const iconIn = interpolate(frame, [typeStart - 2, typeStart + Math.round(fps * 0.12)], [0, 1], {
+                extrapolateLeft: "clamp",
+                extrapolateRight: "clamp",
+              });
+              const showCaret = frame >= typeStart && nVisible < text.length;
+              const caretBlink = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin((frame - typeStart) * 0.45));
               return (
                 <div
                   key={text}
@@ -1594,8 +1633,8 @@ const PremiumGreenClosingScene: React.FC<{
                     flexDirection: "row",
                     alignItems: "flex-start",
                     gap: 20 * k,
-                    opacity: stagger,
-                    transform: `translateY(${(1 - stagger) * 10 * k}px)`,
+                    opacity: rowIn,
+                    transform: `translateY(${(1 - rowIn) * 12 * k}px)`,
                   }}
                 >
                   <div
@@ -1607,6 +1646,8 @@ const PremiumGreenClosingScene: React.FC<{
                       alignItems: "center",
                       justifyContent: "center",
                       marginTop: 2 * k,
+                      opacity: iconIn,
+                      transform: `scale(${0.86 + iconIn * 0.14})`,
                     }}
                   >
                     <svg
@@ -1642,7 +1683,21 @@ const PremiumGreenClosingScene: React.FC<{
                       letterSpacing: -0.02,
                     }}
                   >
-                    {text}
+                    {visibleText}
+                    {showCaret ? (
+                      <span
+                        aria-hidden
+                        style={{
+                          display: "inline-block",
+                          marginLeft: 1 * k,
+                          width: 2 * k,
+                          minHeight: (tallAspect ? 26 : 28) * k * 1.2,
+                          verticalAlign: "text-bottom",
+                          background: `rgba(233, 240, 230, ${caretBlink})`,
+                          borderRadius: 0.5 * k,
+                        }}
+                      />
+                    ) : null}
                   </div>
                 </div>
               );
@@ -1662,34 +1717,43 @@ const PremiumGreenClosingScene: React.FC<{
             boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
             padding: 36 * k,
             boxSizing: "border-box",
+            overflow: "visible",
           }}
         >
           <div
             style={{
+              position: "relative",
+              zIndex: 2,
               fontSize: 30 * k,
               fontWeight: 700,
               color: "#2d4a32",
               marginBottom: 8 * k,
               letterSpacing: -0.03,
               textAlign: "center",
+              background: "linear-gradient(180deg, #f8f9f5 0%, #f8f9f5 72%, rgba(248,249,245,0) 100%)",
             }}
           >
             Exponering för ert företag
           </div>
           <div
             style={{
+              position: "relative",
+              zIndex: 2,
               fontSize: 19 * k,
               fontWeight: 400,
               color: "#5c6560",
               marginBottom: 24 * k,
               lineHeight: 1.4,
               textAlign: "center",
+              background: "linear-gradient(180deg, #f8f9f5 0%, #f8f9f5 55%, rgba(248,249,245,0) 100%)",
             }}
           >
             Månadstrend för hur många som ser er profil och ert varumärke på Hantverkskollen.
           </div>
           <div
             style={{
+              position: "relative",
+              zIndex: 2,
               height: 2 * k,
               background: "rgba(51, 70, 48, 0.1)",
               marginBottom: 20 * k,
@@ -1700,9 +1764,17 @@ const PremiumGreenClosingScene: React.FC<{
           />
           <svg
             width={chartSvgW}
-            height={chartH}
-            viewBox={`0 0 ${chartSvgW} ${chartH}`}
-            style={{ display: "block", overflow: "visible", marginLeft: "auto", marginRight: "auto" }}
+            height={chartSvgViewH}
+            viewBox={`0 ${-chartSvgExtendTop} ${chartSvgW} ${chartSvgViewH}`}
+            style={{
+              display: "block",
+              overflow: "visible",
+              marginLeft: "auto",
+              marginRight: "auto",
+              marginTop: -26 * k,
+              position: "relative",
+              zIndex: 1,
+            }}
             aria-label="Linjediagram: exponering över året"
           >
             {[0.25, 0.5, 0.75].map((gy) => (
@@ -1742,7 +1814,7 @@ const PremiumGreenClosingScene: React.FC<{
             {chartMonths.map((label, i) => (
               <text
                 key={label}
-                x={i === chartMonths.length - 1 ? points[nPts - 1].x : padX + (plotW * i) / (chartMonths.length - 1)}
+                x={monthLabelXs[i]}
                 y={chartH - 8 * k}
                 textAnchor="middle"
                 fill="#5c6560"
