@@ -206,6 +206,19 @@ const ResultRow: React.FC<ResultRowProps> = ({
       })
     : 0;
 
+  /**
+   * Mjukt interpolerad max-bredd så “lyft-kort”-tappet inte snäpper när maxWidth slår till under
+   * morphT-transitionen — startvärdet (≈ förälderns innehållsbredd) hindrar att raden plötsligt
+   * begränsas innan animationen kommit en bit på väg.
+   */
+  const liftCardMaxWidth = liftCfg
+    ? interpolate(morphT, [0, 1], [1892 * k, 1740 * k], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.out(Easing.cubic),
+      })
+    : undefined;
+
   /** Kompensera list-scroll så sista raden sitter kvar; sluta lyfta z-index när kortet är platt och scrollen är klar (undvik “dubbelt kort” mot pagination). */
   const rawScrollCancelY =
     liftCfg && liftProgress >= 1 ? stickAnchorMoveY - parentScrollY : 0;
@@ -234,26 +247,23 @@ const ResultRow: React.FC<ResultRowProps> = ({
           boxSizing: "border-box",
           ...(liftCfg
             ? {
-                maxWidth: morphT > 0.001 ? 1740 * k : undefined,
-                /** Symmetrisk inset + auto-marginaler = centrerat kort (samma luft vänster/höger). */
-                width: morphT > 0.001 ? `calc(100% - ${44 * k}px)` : undefined,
-                marginLeft: morphT > 0.001 ? "auto" : undefined,
-                marginRight: morphT > 0.001 ? "auto" : undefined,
-                marginBottom: morphT > 0.001 ? 14 * k : undefined,
+                /**
+                 * Kontinuerliga värden (utan tröskel på `morphT`) så raden inte snäpper i layouten när
+                 * lyft-kortet läggs ner — bredd, margin och transform interpolerar mjukt mot 0.
+                 */
+                maxWidth: liftCardMaxWidth,
+                width: `calc(100% - ${44 * k * morphT}px)`,
+                marginLeft: "auto",
+                marginRight: "auto",
+                marginBottom: 14 * k * morphT,
                 position: "relative",
                 zIndex:
                   liftProgress > 0 && !scrollStickActive ? 8 : undefined,
-                transform:
-                  morphT > 0.001
-                    ? `scale(${liftScale}) translateY(${liftTy}px)`
-                    : undefined,
+                transform: `scale(${liftScale}) translateY(${liftTy}px)`,
                 transformOrigin: "50% 12%",
-                boxShadow:
-                  liftShadowAlpha > 0.001
-                    ? `0 ${20 * morphT}px ${64 * morphT}px rgba(32,33,36,${liftShadowAlpha})`
-                  : undefined,
+                boxShadow: `0 ${20 * morphT}px ${64 * morphT}px rgba(32,33,36,${liftShadowAlpha})`,
                 borderRadius: liftCardRadius,
-                background: morphT > 0.001 ? BG : undefined,
+                background: BG,
               }
             : {}),
         }}
@@ -584,10 +594,12 @@ const RESULTS_SCROLL_HEIGHT_PX =
 
 /** Längd på scroll-rörelsen i bildrutor — lägre värde = snabbare (tidigare 250). */
 const GOOGLE_SCROLL_ANIMATION_FRAMES = 150;
-/** Sista bildrutorna av scroll: lyft-kortet tonas till samma layout som övriga rader. */
+/**
+ * Sista bildrutorna av scroll: lyft-kortet tonas till samma layout som övriga rader OCH glider
+ * från sin "stuck"-position längst ned till sin nya topp-plats (efter swap). Båda rörelserna
+ * sker över samma intervall så de smälter ihop till en enda mjuk landning.
+ */
 const GOOGLE_SCROLL_LIFT_CARD_FADE_FRAMES = 22;
-/** Allabolag försvinner från första träff (byte med Hantverkskollen) så här många sekunder före scroll-animationens slut. */
-const GOOGLE_RESULT_SWAP_EARLY_SEC = 0.1;
 
 /** Hantverkskollen-rad: skrivmaskin, sedan lyft — scroll startar efter båda (+ kort paus). */
 const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC = 5.75;
@@ -595,6 +607,15 @@ const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SEC = 5.75;
 const GOOGLE_HANTVERKSKOLLEN_TYPEWRITER_SOURCE_WEIGHT = 8;
 const GOOGLE_HANTVERKSKOLLEN_LIFT_SEC = 0.85;
 const GOOGLE_SCROLL_AFTER_INTRO_PAUSE_SEC = 0.12;
+
+/** Beräknad scroll-höjd för alla rader utom Hantverkskollen (= sumRowsBeforeLast). Används för
+ * att smidigt flytta lyft-kortet från sin "stuck"-position längst ned till sin nya naturliga
+ * topp-position efter swap, utan att hoppa. */
+const RESULTS_BEFORE_HANTVERKSKOLLEN_SCROLL_HEIGHT_PX =
+  RESULTS.slice(0, -1).reduce(
+    (sum, r) => sum + estimateRowScrollHeight(r.title) + (r.marginBottomExtraU ?? 0),
+    0,
+  ) * GOOGLE_RESULT_ROW_SCALE;
 
 /**
  * Minsta `durationInFrames` så skrivmaskin + lyft + paus + lista-scroll (150 rutor) hinner klart.
@@ -783,19 +804,32 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
   );
 
   /**
-   * När listan nästan skrollat klart: byt plats på första (Allabolag) och sista (Hantverkskollen) —
-   * `GOOGLE_RESULT_SWAP_EARLY_SEC` före scrollens slut. Ordning blir [HK, 1, 2, …, n−2, Allabolag],
-   * så index 1 hamnar direkt under HK efter bytet.
+   * Byt plats på första (Allabolag) och sista (Hantverkskollen) precis när lyft-kortet börjar
+   * läggas ner — så att swap + lay-down + positionsförflyttning sker som EN enhetlig rörelse.
+   * Innan: swap skedde mitt i lay-down (kortet hoppade i x-led/bredd när tröskeln passerades).
+   * Efter: vi behåller HK:s visuella position vid swap-ögonblicket via en justerad
+   * `stickAnchorMoveY`, och låter den interpolera mjukt mot 0 medan kortet samtidigt
+   * tonas ner (`liftCardHoldFactor`). Resultat: kortet glider på plats utan glitch.
    */
   const nResults = RESULTS.length;
   const resultSwapScrollFrame = Math.max(
     0,
-    GOOGLE_SCROLL_ANIMATION_FRAMES - Math.round(fps * GOOGLE_RESULT_SWAP_EARLY_SEC),
+    GOOGLE_SCROLL_ANIMATION_FRAMES - GOOGLE_SCROLL_LIFT_CARD_FADE_FRAMES,
   );
   const scrollComplete = scrollFrame >= resultSwapScrollFrame;
   const resultDisplayOrder = scrollComplete
     ? [nResults - 1, ...Array.from({ length: nResults - 2 }, (_, i) => i + 1), 0]
     : Array.from({ length: nResults }, (_, i) => i);
+
+  /**
+   * Efter swap: raden har bytt naturligt y-läge (från sista- till första-platsen). För att den
+   * visuella positionen ska vara identisk i swap-ögonblicket sätter vi en anchor som
+   * kompenserar för avståndet mellan de två naturliga positionerna. Anchor tonas sedan mot 0
+   * i takt med `liftCardHoldFactor` så raden glider in i sitt nya hem (toppen av listan).
+   */
+  const hantverkPostSwapAnchorBase =
+    RESULTS_BEFORE_HANTVERKSKOLLEN_SCROLL_HEIGHT_PX - scrollMax;
+  const hantverkPostSwapAnchor = hantverkPostSwapAnchorBase * liftCardHoldFactor;
 
   return (
     <AbsoluteFill
@@ -968,17 +1002,26 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
           {resultDisplayOrder.map((resultIndex) => {
             const r = RESULTS[resultIndex];
             const isHantverkskollenRow = resultIndex === nResults - 1;
-            /** Efter scroll: moveY=0 men stickAnchorMoveY kan fortfarande vara −scrollMax → skulle flytta raden långt upp (lucka). Kompensation bara under scroll. */
-            const hantverkScrollStick =
-              isHantverkskollenRow && !scrollComplete;
+            /**
+             * HK-raden hålls visuellt stilla över hela scroll + swap. Före swap används
+             * `stickAnchorMoveY` (start-läget, längst ned). Efter swap har raden bytt natural
+             * y-läge så vi byter till `hantverkPostSwapAnchor` som börjar på samma visuella
+             * position och tonar mot 0 medan kortet samtidigt läggs ner.
+             */
+            const hkParentScrollY = isHantverkskollenRow ? moveY : undefined;
+            const hkAnchor = isHantverkskollenRow
+              ? scrollComplete
+                ? hantverkPostSwapAnchor
+                : stickAnchorMoveY
+              : undefined;
             return (
               <ResultRow
                 key={r.urlPath}
                 k={k}
                 {...r}
                 iconSeed={Math.floor((resultIndex * 17 + 11) % 97)}
-                parentScrollY={hantverkScrollStick ? moveY : undefined}
-                stickAnchorMoveY={hantverkScrollStick ? stickAnchorMoveY : undefined}
+                parentScrollY={hkParentScrollY}
+                stickAnchorMoveY={hkAnchor}
                 liftCardHoldT={isHantverkskollenRow ? liftCardHoldFactor : undefined}
                 typewriter={
                   isHantverkskollenRow
