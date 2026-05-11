@@ -1322,12 +1322,12 @@ export const HantverkskollenSearchJourney: React.FC = () => {
 };
 
 const BULLET_CLOSING_ITEMS = [
-  "Egen företagssida på Hantverkskollen",
-  "Synlighet i ert område",
-  "Möjlighet för kunder att hitta och kontakta er direkt",
-  "Fördelaktigare ranking jämfört med andra företag",
-  "Certifieringsmärkning på er profil",
-  "Ökad exponering och starkare förtroende",
+  "Få fler kunder och bygg ett starkare företag online",
+  "Syns på Google när kunder söker hantverkare i ert område",
+  "Ta emot fler kundförfrågningar direkt via er profil",
+  "Bygg förtroende med en professionell företagssida",
+  "Stärk er närvaro online och nå fler lokala kunder",
+  "Visa upp ert företag på ett seriöst och modernt sätt",
 ];
 
 /** Mjuk linje genom datapunkter (Catmull-Rom → kubiska Bézier, delare 6 = klassisk “mjuk graf”). */
@@ -1594,10 +1594,10 @@ const PremiumGreenClosingScene: React.FC<{
         >
         <div
           style={{
-            flex: "0 0 auto",
-            width: tallAspect ? Math.min(640 * k, width - 96 * k) : undefined,
+            flex: tallAspect ? "0 0 auto" : "1 1 0",
+            width: tallAspect ? Math.min(840 * k, width - 56 * k) : undefined,
             minWidth: 0,
-            maxWidth: tallAspect ? Math.min(640 * k, width - 96 * k) : 980 * k,
+            maxWidth: tallAspect ? Math.min(840 * k, width - 56 * k) : Math.min(1180 * k, width - 120 * k),
           }}
         >
           <div
@@ -1641,6 +1641,8 @@ const PremiumGreenClosingScene: React.FC<{
                     flexDirection: "row",
                     alignItems: "flex-start",
                     gap: 20 * k,
+                    width: "100%",
+                    minWidth: 0,
                     opacity: rowIn,
                     transform: `translateY(${(1 - rowIn) * 12 * k}px)`,
                   }}
@@ -1684,6 +1686,8 @@ const PremiumGreenClosingScene: React.FC<{
                   </div>
                   <div
                     style={{
+                      flex: 1,
+                      minWidth: 0,
                       fontSize: (tallAspect ? 26 : 28) * k,
                       lineHeight: 1.35,
                       fontWeight: 500,
@@ -1741,7 +1745,7 @@ const PremiumGreenClosingScene: React.FC<{
               background: "linear-gradient(180deg, #f8f9f5 0%, #f8f9f5 72%, rgba(248,249,245,0) 100%)",
             }}
           >
-            Exponering för ert företag
+            Er synlighet kan växa månad för månad
           </div>
           <div
             style={{
@@ -1756,7 +1760,7 @@ const PremiumGreenClosingScene: React.FC<{
               background: "linear-gradient(180deg, #f8f9f5 0%, #f8f9f5 55%, rgba(248,249,245,0) 100%)",
             }}
           >
-            Månadstrend för hur många som ser er profil och ert varumärke på Hantverkskollen.
+            Så kan er synlighet utvecklas mot lokala kundsökningar på Hantverkskollen.
           </div>
           <div
             style={{
@@ -1783,7 +1787,7 @@ const PremiumGreenClosingScene: React.FC<{
               position: "relative",
               zIndex: 1,
             }}
-            aria-label="Linjediagram: exponering över året"
+            aria-label="Linjediagram: synlighet och kontaktmöjligheter över året"
           >
             {[0.25, 0.5, 0.75].map((gy) => (
               <line
