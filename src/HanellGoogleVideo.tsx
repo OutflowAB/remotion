@@ -166,31 +166,25 @@ const ResultRow: React.FC<ResultRowProps> = ({
     liftProgress =
       liftCfg.durationFrames <= 0 ? 1 : Math.min(1, Math.max(0, lf / liftCfg.durationFrames));
   }
-  const cardT = liftCfg ? liftProgress * liftCardHoldT : 0;
+  /** Synkar layout (width/padding) med skala/skugga; undvik `liftProgress*hold` som blev ≪1 före width togs bort. */
+  const morphT = liftCfg ? liftProgress * (liftProgress >= 1 ? liftCardHoldT : 1) : 0;
   const liftScale =
     liftCfg !== undefined
-      ? interpolate(cardT, [0, 1], [1, 1.06], {
+      ? interpolate(morphT, [0, 1], [1, 1.06], {
           extrapolateLeft: "clamp",
           extrapolateRight: "clamp",
           easing: Easing.out(Easing.cubic),
         })
       : 1;
-  const liftTy =
-    liftCfg !== undefined
-      ? interpolate(cardT, [0, 1], [0, -34 * k], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-          easing: Easing.out(Easing.cubic),
-        })
-      : 0;
-  const liftShadowAlpha = interpolate(cardT, [0, 1], [0, 0.28], {
+  const liftTy = 0;
+  const liftShadowAlpha = interpolate(morphT, [0, 1], [0, 0.28], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.cubic),
   });
 
   const rowPadX = liftCfg
-    ? interpolate(cardT, [0, 1], [padX, 18 * k], {
+    ? interpolate(morphT, [0, 1], [padX, 18 * k], {
         extrapolateLeft: "clamp",
         extrapolateRight: "clamp",
         easing: Easing.out(Easing.cubic),
@@ -198,14 +192,14 @@ const ResultRow: React.FC<ResultRowProps> = ({
     : padX;
   /** Vertikal padding i takt med lyftet; slutar mot samma mått som sidorna så kortet får luft upp/ned också. */
   const rowPadY = liftCfg
-    ? interpolate(cardT, [0, 1], [16 * k, 18 * k], {
+    ? interpolate(morphT, [0, 1], [16 * k, 18 * k], {
         extrapolateLeft: "clamp",
         extrapolateRight: "clamp",
         easing: Easing.out(Easing.cubic),
       })
     : 0;
   const liftCardRadius = liftCfg
-    ? interpolate(cardT, [0, 1], [22 * k, 28 * k], {
+    ? interpolate(morphT, [0, 1], [22 * k, 28 * k], {
         extrapolateLeft: "clamp",
         extrapolateRight: "clamp",
         easing: Easing.out(Easing.cubic),
@@ -218,14 +212,13 @@ const ResultRow: React.FC<ResultRowProps> = ({
   const scrollStickActive = Boolean(
     liftCfg &&
       liftProgress >= 1 &&
-      (cardT > 0.001 || Math.abs(rawScrollCancelY) > 0.5),
+      (morphT > 0.001 || Math.abs(rawScrollCancelY) > 0.5),
   );
   const scrollCancelY = scrollStickActive ? rawScrollCancelY : 0;
 
   return (
     <div
       style={{
-        marginTop: liftCfg && cardT > 0.001 ? 14 * u * cardT : undefined,
         marginBottom: (22 + marginBottomExtraU) * u,
         transform: scrollCancelY !== 0 ? `translateY(${scrollCancelY}px)` : undefined,
         position: scrollStickActive ? "relative" : undefined,
@@ -241,26 +234,26 @@ const ResultRow: React.FC<ResultRowProps> = ({
           boxSizing: "border-box",
           ...(liftCfg
             ? {
-                maxWidth: cardT > 0.001 ? 1740 * k : undefined,
+                maxWidth: morphT > 0.001 ? 1740 * k : undefined,
                 /** Symmetrisk inset + auto-marginaler = centrerat kort (samma luft vänster/höger). */
-                width: cardT > 0.001 ? `calc(100% - ${44 * k}px)` : undefined,
-                marginLeft: cardT > 0.001 ? "auto" : undefined,
-                marginRight: cardT > 0.001 ? "auto" : undefined,
-                marginBottom: cardT > 0.001 ? 14 * k : undefined,
+                width: morphT > 0.001 ? `calc(100% - ${44 * k}px)` : undefined,
+                marginLeft: morphT > 0.001 ? "auto" : undefined,
+                marginRight: morphT > 0.001 ? "auto" : undefined,
+                marginBottom: morphT > 0.001 ? 14 * k : undefined,
                 position: "relative",
                 zIndex:
                   liftProgress > 0 && !scrollStickActive ? 8 : undefined,
                 transform:
-                  cardT > 0.001
+                  morphT > 0.001
                     ? `scale(${liftScale}) translateY(${liftTy}px)`
                     : undefined,
                 transformOrigin: "50% 12%",
                 boxShadow:
                   liftShadowAlpha > 0.001
-                    ? `0 ${20 * cardT}px ${64 * cardT}px rgba(32,33,36,${liftShadowAlpha})`
+                    ? `0 ${20 * morphT}px ${64 * morphT}px rgba(32,33,36,${liftShadowAlpha})`
                   : undefined,
                 borderRadius: liftCardRadius,
-                background: cardT > 0.001 ? BG : undefined,
+                background: morphT > 0.001 ? BG : undefined,
               }
             : {}),
         }}
@@ -335,7 +328,6 @@ const ResultRow: React.FC<ResultRowProps> = ({
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
-                marginTop: 2 * u,
               }}
             >
               {typewriter ? dSub : urlSubline}
@@ -412,7 +404,7 @@ const GoogleMark: React.FC<{ size?: number }> = ({ size = 92 }) => (
 const GOOGLE_RESULT_ROW_SCALE = 1.12;
 
 /** Mock query in the sticky search field (fiktiv demo). */
-const GOOGLE_MOCK_SEARCH_QUERY = "målare i Karlskrona";
+const GOOGLE_MOCK_SEARCH_QUERY = "Målare i Karlskrona";
 
 const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
   {
@@ -561,7 +553,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
     marginBottomExtraU: 12,
   },
   {
-    title: "Anderssons Måleri AB – målare i Karlskrona | offerter och omdömen",
+    title: "Anderssons Måleri AB – Målare i Karlskrona | offerter och omdömen",
     urlPath: "https://www.anderssons-maleri-ab.se › karlskrona › profil",
     urlSubline: "… › katalog › verifierad › rot-avdrag",
     source: "Hantverkskollen",
@@ -618,7 +610,7 @@ export function getHanellGoogleMinDurationFrames(fps: number, endHoldSec = 1.75)
   return introDelayFrames + GOOGLE_SCROLL_ANIMATION_FRAMES + Math.round(fps * endHoldSec);
 }
 
-const TABS = ["All", "Images", "Videos", "News", "Short videos", "Web", "More"];
+const TABS = ["Allt", "Bilder", "Videor", "Nyheter", "Korta videor", "Webb", "Fler"];
 
 const GOOGLE_PAGINATION_HEIGHT_PX = 460;
 
@@ -737,9 +729,11 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
   const GOOGLE_CHROME_SCALE = 1.85;
   const ck = k * GOOGLE_CHROME_SCALE;
 
-  const contentTop = 188 * ck;
+  /** Under sökfält + flikar; något lägre värde lyfter upp resultatlistan. */
+  const contentTop = 172 * ck;
+  /** Utrymme före första träffraden (utan kolumnens pad-top — den är 0). */
   const mainColumnHeader =
-    20 * k + (14 * k + 12 * k) + 20 * k + 18 * k;
+    20 * k + (14 * k + 12 * k) + 20 * k + 18 * k - 22 * k;
   const paginationHeight = GOOGLE_PAGINATION_HEIGHT_PX * k * GOOGLE_RESULT_ROW_SCALE;
 
   /** Search chrome is sticky; result rows and pagination scroll underneath it. */
@@ -855,9 +849,21 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
                   fontSize: 16 * ck,
                   color: TEXT,
                   padding: `0 ${8 * ck}px`,
+                  display: "flex",
+                  alignItems: "center",
+                  minWidth: 0,
                 }}
               >
-                {GOOGLE_MOCK_SEARCH_QUERY}
+                <span
+                  style={{
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {GOOGLE_MOCK_SEARCH_QUERY}
+                </span>
               </div>
               <Mic size={20 * ck} color={MUTED} strokeWidth={2} style={{ marginRight: 16 * ck }} />
               <Camera size={20 * ck} color={MUTED} strokeWidth={2} />
@@ -920,13 +926,15 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
         {/* Main column — narrow side inset so rows reach almost to the frame edge */}
         <div
           style={{
-            padding: `${22 * k}px ${14 * k}px ${12 * k}px`,
+            margin: 0,
+            padding: `0 ${14 * k}px ${12 * k}px`,
           }}
         >
           <div
             style={{
               fontSize: 14 * k * GOOGLE_RESULT_ROW_SCALE,
               color: MUTED,
+              margin: 0,
               marginBottom: 12 * k,
             }}
           >
@@ -939,6 +947,8 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
               height: 1,
               overflow: "hidden",
               clip: "rect(0 0 0 0)",
+              margin: 0,
+              padding: 0,
             }}
           >
             Search Results
@@ -948,7 +958,8 @@ export const HanellGoogleVideo: React.FC<HanellGoogleVideoProps> = ({
               fontSize: 20 * k * GOOGLE_RESULT_ROW_SCALE,
               fontWeight: 400,
               color: TEXT,
-              margin: `0 0 ${18 * k * GOOGLE_RESULT_ROW_SCALE}px`,
+              margin: 0,
+              marginBottom: `${18 * k * GOOGLE_RESULT_ROW_SCALE}px`,
             }}
           >
             Webbresultat

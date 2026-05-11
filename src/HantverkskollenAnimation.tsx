@@ -584,7 +584,7 @@ const IntroCompanyJoinScene: React.FC<{
               boxSizing: "border-box",
             }}
           />
-          Verifieringsformulär
+          Anslutningsformulär
         </div>
         <div
           style={{
@@ -1081,7 +1081,7 @@ const StaticScene: React.FC<{
             x={listX}
             y={insertedCardYWithMargin}
             title="Anderssons Måleri AB"
-            subtitle="Wachtmeistergatan 11, 371 28 Karlskrona"
+            subtitle="Borgmästaregatan 21, 371 15 Karlskrona"
             price="840"
             driveFee="270 kr"
             baseFee="420 kr"
@@ -1466,6 +1466,8 @@ const PremiumGreenClosingScene: React.FC<{
   );
   /** Kortbredd: diagram + padding + extra luft åt sidorna (kapas vid smal viewport). */
   const chartCardOuterW = Math.min(chartSvgW + 72 * k + 160 * k, width - 80 * k);
+  const chartAreaBottomY = padY + plotH + 3 * k;
+  const chartAreaPathD = `${pathD} L ${points[nPts - 1].x.toFixed(1)} ${chartAreaBottomY.toFixed(1)} L ${points[0].x.toFixed(1)} ${chartAreaBottomY.toFixed(1)} Z`;
 
   return (
     <AbsoluteFill
@@ -1723,119 +1725,207 @@ const PremiumGreenClosingScene: React.FC<{
             alignSelf: "center",
             marginTop: tallAspect ? 36 * k : 28 * k,
             width: chartCardOuterW,
-            borderRadius: 20 * k,
-            background: "#f8f9f5",
-            border: `${1 * k}px solid rgba(51, 70, 48, 0.12)`,
-            boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
-            padding: 36 * k,
+            borderRadius: 24 * k,
+            background: "linear-gradient(152deg, #fcfdf9 0%, #f3f6f0 42%, #e9eee4 100%)",
+            border: `${1 * k}px solid rgba(255, 255, 255, 0.65)`,
+            boxShadow:
+              "0 1px 0 rgba(255, 255, 255, 0.85) inset, 0 0 0 1px rgba(51, 70, 48, 0.06) inset, 0 28px 56px rgba(15, 24, 18, 0.28), 0 10px 22px rgba(15, 24, 18, 0.12), 0 0 80px rgba(255, 122, 74, 0.12)",
+            padding: 0,
             boxSizing: "border-box",
-            overflow: "visible",
+            overflow: "hidden",
           }}
         >
           <div
             style={{
-              position: "relative",
-              zIndex: 2,
-              fontSize: 30 * k,
-              fontWeight: 700,
-              color: "#2d4a32",
-              marginBottom: 8 * k,
-              letterSpacing: -0.03,
-              textAlign: "center",
-              background: "linear-gradient(180deg, #f8f9f5 0%, #f8f9f5 72%, rgba(248,249,245,0) 100%)",
-            }}
-          >
-            Er synlighet kan växa månad för månad
-          </div>
-          <div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              fontSize: 19 * k,
-              fontWeight: 400,
-              color: "#5c6560",
-              marginBottom: 24 * k,
-              lineHeight: 1.4,
-              textAlign: "center",
-              background: "linear-gradient(180deg, #f8f9f5 0%, #f8f9f5 55%, rgba(248,249,245,0) 100%)",
-            }}
-          >
-            Så kan er synlighet utvecklas mot lokala kundsökningar på Hantverkskollen.
-          </div>
-          <div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              height: 2 * k,
-              background: "rgba(51, 70, 48, 0.1)",
-              marginBottom: 20 * k,
-              marginLeft: "auto",
-              marginRight: "auto",
-              maxWidth: chartSvgW,
+              height: 5 * k,
+              width: "100%",
+              background:
+                "linear-gradient(90deg, rgba(100, 140, 95, 0.55) 0%, rgba(240, 140, 94, 0.75) 48%, rgba(100, 140, 95, 0.5) 100%)",
+              opacity: 0.95,
             }}
           />
-          <svg
-            width={chartSvgW}
-            height={chartSvgViewH}
-            viewBox={`0 ${-chartSvgExtendTop} ${chartSvgW} ${chartSvgViewH}`}
+          <div
             style={{
-              display: "block",
-              overflow: "visible",
-              marginLeft: "auto",
-              marginRight: "auto",
-              marginTop: -26 * k,
               position: "relative",
-              zIndex: 1,
+              paddingLeft: 40 * k,
+              paddingRight: 40 * k,
+              paddingTop: 28 * k,
+              paddingBottom: 32 * k,
+              boxSizing: "border-box",
             }}
-            aria-label="Linjediagram: synlighet och kontaktmöjligheter över året"
           >
-            {[0.25, 0.5, 0.75].map((gy) => (
-              <line
-                key={gy}
-                x1={padX}
-                x2={chartW - padX}
-                y1={padY + gy * plotH}
-                y2={padY + gy * plotH}
-                stroke="rgba(0,0,0,0.06)"
-                strokeWidth={1 * k}
-              />
-            ))}
-            <path
-              d={pathD}
-              fill="none"
-              stroke="#f08c5e"
-              strokeWidth={5 * k}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              pathLength={1}
-              strokeDasharray={1}
-              strokeDashoffset={1 - lineDraw}
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 0,
+                pointerEvents: "none",
+                backgroundImage: [
+                  "linear-gradient(90deg, rgba(252, 253, 249, 0.92) 0%, transparent 14%, transparent 86%, rgba(252, 253, 249, 0.92) 100%)",
+                  `repeating-linear-gradient(180deg, transparent 0, transparent ${19 * k}px, rgba(45, 74, 50, 0.045) ${19 * k}px, rgba(45, 74, 50, 0.09) ${19.25 * k}px, rgba(45, 74, 50, 0.045) ${19.5 * k}px, transparent ${20.5 * k}px)`,
+                ].join(", "),
+                opacity: 0.85,
+              }}
             />
-            {points.map((p, i) => (
-              <circle
-                key={`${i}-${p.x.toFixed(0)}`}
-                cx={p.x}
-                cy={p.y}
-                r={i === nPts - 1 ? 4.2 * k : 3 * k}
-                fill="#ffffff"
-                stroke="#f08c5e"
-                strokeWidth={i === nPts - 1 ? 1.85 * k : 1.35 * k}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 1,
+                background:
+                  "radial-gradient(ellipse 85% 55% at 50% -8%, rgba(255, 255, 255, 0.55) 0%, transparent 58%)",
+                pointerEvents: "none",
+                opacity: 0.9,
+              }}
+            />
+            <div
+              style={{
+                position: "relative",
+                zIndex: 2,
+                fontSize: (tallAspect ? 28 : 30) * k,
+                fontWeight: 700,
+                letterSpacing: -0.035,
+                textAlign: "center",
+                lineHeight: 1.2,
+                marginBottom: 10 * k,
+                maxWidth: chartSvgW * 1.05,
+                marginLeft: "auto",
+                marginRight: "auto",
+                background: "linear-gradient(118deg, #1a3320 0%, #2d4a32 38%, #3d6b45 72%, #2a4530 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              Er synlighet kan växa månad för månad
+            </div>
+            <div
+              style={{
+                position: "relative",
+                zIndex: 2,
+                fontSize: 18.5 * k,
+                fontWeight: 400,
+                color: "#4a5650",
+                marginBottom: 22 * k,
+                lineHeight: 1.45,
+                textAlign: "center",
+                letterSpacing: -0.015,
+                maxWidth: Math.min(chartSvgW + 24 * k, chartCardOuterW - 48 * k),
+                marginLeft: "auto",
+                marginRight: "auto",
+              }}
+            >
+              Så kan er synlighet utvecklas mot lokala kundsökningar på{" "}
+              <span style={{ color: "#2d4a32", fontWeight: 600 }}>Hantverkskollen</span>.
+            </div>
+            <div
+              style={{
+                position: "relative",
+                zIndex: 2,
+                height: 1 * k,
+                marginBottom: 22 * k,
+                marginLeft: "auto",
+                marginRight: "auto",
+                maxWidth: chartSvgW * 0.92,
+                borderRadius: 2 * k,
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(51, 70, 48, 0.14) 22%, rgba(240, 140, 94, 0.35) 50%, rgba(51, 70, 48, 0.14) 78%, transparent 100%)",
+              }}
+            />
+            <svg
+              width={chartSvgW}
+              height={chartSvgViewH}
+              viewBox={`0 ${-chartSvgExtendTop} ${chartSvgW} ${chartSvgViewH}`}
+              style={{
+                display: "block",
+                overflow: "visible",
+                marginLeft: "auto",
+                marginRight: "auto",
+                marginTop: -24 * k,
+                position: "relative",
+                zIndex: 1,
+              }}
+              aria-label="Linjediagram: synlighet och kontaktmöjligheter över året"
+            >
+              <defs>
+                <linearGradient id="hkClosingChartLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#e07048" />
+                  <stop offset="50%" stopColor="#f08c5e" />
+                  <stop offset="100%" stopColor="#ffc4a8" />
+                </linearGradient>
+                <linearGradient
+                  id="hkClosingChartArea"
+                  gradientUnits="userSpaceOnUse"
+                  x1={0}
+                  y1={padY}
+                  x2={0}
+                  y2={chartAreaBottomY}
+                >
+                  <stop offset="0%" stopColor="rgba(240, 140, 94, 0.32)" />
+                  <stop offset="55%" stopColor="rgba(240, 140, 94, 0.08)" />
+                  <stop offset="100%" stopColor="rgba(240, 140, 94, 0)" />
+                </linearGradient>
+              </defs>
+              <path
+                d={chartAreaPathD}
+                fill="url(#hkClosingChartArea)"
                 opacity={lineDraw}
               />
-            ))}
-            {chartMonths.map((label, i) => (
-              <text
-                key={label}
-                x={monthLabelXs[i]}
-                y={chartH - 8 * k}
-                textAnchor="middle"
-                fill="#5c6560"
-                style={{ fontSize: 15 * k, fontFamily: "Inter, system-ui, sans-serif" }}
-              >
-                {label}
-              </text>
-            ))}
-          </svg>
+              {[0.25, 0.5, 0.75].map((gy) => (
+                <line
+                  key={gy}
+                  x1={padX}
+                  x2={chartW - padX}
+                  y1={padY + gy * plotH}
+                  y2={padY + gy * plotH}
+                  stroke="rgba(45, 74, 50, 0.07)"
+                  strokeWidth={1 * k}
+                  strokeDasharray={`${6 * k} ${5 * k}`}
+                />
+              ))}
+              <path
+                d={pathD}
+                fill="none"
+                stroke="url(#hkClosingChartLine)"
+                strokeWidth={5 * k}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                pathLength={1}
+                strokeDasharray={1}
+                strokeDashoffset={1 - lineDraw}
+              />
+              {points.map((p, i) => (
+                <circle
+                  key={`${i}-${p.x.toFixed(0)}`}
+                  cx={p.x}
+                  cy={p.y}
+                  r={i === nPts - 1 ? 4.2 * k : 3 * k}
+                  fill={i === nPts - 1 ? "#fffaf7" : "#ffffff"}
+                  stroke={i === nPts - 1 ? "#e07048" : "#f08c5e"}
+                  strokeWidth={i === nPts - 1 ? 1.85 * k : 1.35 * k}
+                  opacity={lineDraw}
+                />
+              ))}
+              {chartMonths.map((label, i) => (
+                <text
+                  key={label}
+                  x={monthLabelXs[i]}
+                  y={chartH - 8 * k}
+                  textAnchor="middle"
+                  fill="#5a6b5f"
+                  style={{
+                    fontSize: 14.5 * k,
+                    fontFamily: "Inter, system-ui, sans-serif",
+                    fontWeight: 500,
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {label}
+                </text>
+              ))}
+            </svg>
+          </div>
         </div>
         </div>
       </div>
