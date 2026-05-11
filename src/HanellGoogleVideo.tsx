@@ -482,12 +482,12 @@ const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
       "Ekonomiska nyckeltal och styrelse för ett fiktivt bygg- och måleribolag. Jämför med branschsnitt i Blekinge.",
   },
   {
-    title: "Jämför offerter – målare och spackling",
-    urlPath: "https://www.servicefinder.se › malare › blekinge",
-    urlSubline: "… › pris › utan bindning",
-    source: "Servicefinder",
+    title: "Offertförfrågan – målare och spackling (demo)",
+    urlPath: "https://www.offertdemo-blekinge.se › malare › forfragan",
+    urlSubline: "… › prisintervall › utan bindning",
+    source: "Offertdemo Blekinge",
     snippet:
-      "Beskriv yta och önskemål – få svar från flera anslutna firmor. Anonymt tills du väljer att gå vidare.",
+      "Fiktiv tjänst: beskriv yta och önskemål och få svar från påhittade anslutna firmor. Anonymt tills du väljer att gå vidare – endast för videodemonstration.",
   },
   {
     title: "Sök person – företagskopplingar och adresser",
@@ -568,7 +568,7 @@ const RESULTS: Omit<ResultRowProps, "iconSeed" | "k">[] = [
     urlSubline: "… › katalog › verifierad › rot-avdrag",
     source: "Hantverkskollen",
     snippet:
-      "Hitta Anna Andersson och Anderssons Måleri AB i Karlskrona med jämförbara timpriser och omdömen. Filtrera på ROT, boka meddelande och se lokala adresser i Blekinge.",
+      "Anderssons Måleri AB i Karlskrona – samlad profil med timpris, omdömen och ROT-uppgifter. Jämför med andra målare i Blekinge och skicka förfrågan direkt från katalogen.",
     iconSrc: staticFile("logo-circle.svg"),
   },
 ];

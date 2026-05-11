@@ -41,6 +41,10 @@ type CardProps = {
   opacity?: number;
   buildProgress?: number;
   verified?: boolean;
+  /** Om satt: ★★★★★ 5.0; annars fyra fyllda stjärnor + betyg under 5. */
+  perfectFiveStars?: boolean;
+  /** Visas när `perfectFiveStars` är falskt (standard 4.7). */
+  ratingBelowFive?: string;
 };
 
 const reveal = (progress: number, start: number, end: number) => {
@@ -140,31 +144,36 @@ const NavbarMock: React.FC<{ uiScale: number }> = ({ uiScale }) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              height: 46 * uiScale,
-              borderRadius: 14 * uiScale,
-              paddingLeft: 16 * uiScale,
-              paddingRight: 16 * uiScale,
-              fontSize: 13 * uiScale,
+              height: 38 * uiScale,
+              borderRadius: 12 * uiScale,
+              paddingLeft: 14 * uiScale,
+              paddingRight: 14 * uiScale,
+              fontSize: 12.5 * uiScale,
               fontWeight: 700,
               color: "#ffffff",
               backgroundColor: "#FF7A4A",
-              gap: 8 * uiScale,
+              gap: 7 * uiScale,
+              boxShadow: [
+                `0 ${1 * uiScale}px ${2 * uiScale}px rgba(255, 255, 255, 0.35) inset`,
+                `0 ${3 * uiScale}px ${14 * uiScale}px rgba(255, 122, 74, 0.55)`,
+                `0 ${6 * uiScale}px ${28 * uiScale}px rgba(255, 100, 65, 0.28)`,
+              ].join(", "),
             }}
           >
-            <FileText size={15 * uiScale} color="#ffffff" strokeWidth={2.2} />
-            Fler offerter
+            <FileText size={14 * uiScale} color="#ffffff" strokeWidth={2.2} />
+            Få fler offerter
           </div>
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              width: 46 * uiScale,
-              height: 46 * uiScale,
+              width: 38 * uiScale,
+              height: 38 * uiScale,
               color: "#334630",
             }}
           >
-            <Menu size={25 * uiScale} strokeWidth={2.2} />
+            <Menu size={22 * uiScale} strokeWidth={2.2} />
           </div>
         </div>
       </div>
@@ -187,6 +196,8 @@ const Card: React.FC<CardProps> = ({
   opacity = 1,
   verified = false,
   buildProgress = 1,
+  perfectFiveStars = false,
+  ratingBelowFive = "4.7",
 }) => {
   const imageOp = reveal(buildProgress, 0.05, 0.2);
   const titleOp = reveal(buildProgress, 0.18, 0.32);
@@ -267,8 +278,21 @@ const Card: React.FC<CardProps> = ({
               <MapPin size={13 * uiScale} color="#4b5563" strokeWidth={1.8} style={{ flexShrink: 0 }} />
               {subtitle}
             </div>
-            <div style={{ fontSize: 14 * uiScale, color: "#4a6b47", marginTop: 4 * uiScale, letterSpacing: 1, opacity: ratingOp }}>
-              ★★★★★ <span style={{ color: "#4b5563", marginLeft: 4 * uiScale }}>5.0</span>
+            <div
+              style={{
+                fontSize: 18 * uiScale,
+                fontWeight: 600,
+                lineHeight: 1.2,
+                color: "#4a6b47",
+                marginTop: 6 * uiScale,
+                letterSpacing: 1.25 * uiScale,
+                opacity: ratingOp,
+              }}
+            >
+              {perfectFiveStars ? "★★★★★" : "★★★★☆"}{" "}
+              <span style={{ color: "#4b5563", marginLeft: 6 * uiScale, fontWeight: 700 }}>
+                {perfectFiveStars ? "5.0" : ratingBelowFive}
+              </span>
             </div>
           </div>
         </div>
@@ -409,13 +433,38 @@ const getFormSubmitClickFrame = (fps: number) => {
 const CLOSING_CROSSFADE_SECONDS = 0.42;
 export const getClosingCrossfadeFrames = (fps: number) => Math.round(fps * CLOSING_CROSSFADE_SECONDS);
 
+const BULLET_CLOSING_ITEMS = [
+  "Få fler kunder och bygg ett starkare företag online",
+  "Syns på Google när kunder söker hantverkare i ert område",
+  "Ta emot fler kundförfrågningar direkt via er profil",
+  "Bygg förtroende med en professionell företagssida",
+  "Stärk er närvaro online och nå fler lokala kunder",
+  "Visa upp ert företag på ett seriöst och modernt sätt",
+];
+
+/** Stilla efter att sista punkten skrivits färdigt i grön avslutning. */
+const CLOSING_POST_LAST_TYPING_HOLD_SEC = 5;
+
+function getLastClosingBulletTypeEndFrame(fps: number): number {
+  const lastIdx = BULLET_CLOSING_ITEMS.length - 1;
+  const lastText = BULLET_CLOSING_ITEMS[lastIdx];
+  const typeStart = Math.round(fps * 0.1) + lastIdx * Math.round(fps * 0.24);
+  const typeDur = Math.max(Math.round(fps * 0.2), Math.round((lastText.length / 15) * fps));
+  return typeStart + typeDur;
+}
+
+/** Längd för `PremiumGreenClosingScene` (typewriter-punkter + stilla efter sista raden) — håll i synk med `Root`. */
+export function getPremiumGreenClosingDurationInFrames(fps: number): number {
+  return getLastClosingBulletTypeEndFrame(fps) + Math.round(fps * CLOSING_POST_LAST_TYPING_HOLD_SEC);
+}
+
 /** Total längd för `HantverkskollenSearchJourney` (intro + split + grön avslutning) vid given fps — håll i synk med `Root`. */
 export function getHantverkskollenSearchJourneyDurationInFrames(fps: number): number {
   const cross = getClosingCrossfadeFrames(fps);
   return (
     getFormSubmitClickFrame(fps) +
     getHanellGoogleMinDurationFrames(fps, HANTVERKSKOLLEN_SPLIT_HANELL_END_HOLD_SEC) +
-    Math.round(fps * 5) -
+    getPremiumGreenClosingDurationInFrames(fps) -
     cross
   );
 }
@@ -423,12 +472,12 @@ export function getHantverkskollenSearchJourneyDurationInFrames(fps: number): nu
 /** Intro + huvudanimation (utan avslutande grön scen); tidigare hela `HantverkskollenPremium`-längd. */
 export const HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS = 660;
 
-/** Total längd för `HantverkskollenPremium` inkl. 5 s grön avslutning — håll i synk med `Root`. */
+/** Total längd för `HantverkskollenPremium` inkl. grön avslutning — håll i synk med `Root`. */
 export function getHantverkskollenPremiumDurationInFrames(fps: number): number {
   const cross = getClosingCrossfadeFrames(fps);
   return (
     Math.round(HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS * (fps / 60)) +
-    Math.round(fps * 5) -
+    getPremiumGreenClosingDurationInFrames(fps) -
     cross
   );
 }
@@ -1069,6 +1118,7 @@ const StaticScene: React.FC<{
             cardWidth={cardWpx}
             cardHeight={cardHpx}
             opacity={i === mariaIndex ? underCardOpacity : 1}
+            ratingBelowFive={`${(4.15 + ((i * 17) % 65) / 100).toFixed(1).replace(".", ",")}`}
           />
         ))}
         <div
@@ -1094,6 +1144,7 @@ const StaticScene: React.FC<{
             cardHeight={cardHpx}
             verified
             buildProgress={buildProgress}
+            perfectFiveStars
           />
         </div>
 
@@ -1295,7 +1346,7 @@ export const HantverkskollenSearchJourney: React.FC = () => {
   const introFrames = getFormSubmitClickFrame(fps);
   /** Matchar HanellGoogleVideo: typewriter+lyft+paus+scroll + stilla på slutet (`HANTVERKSKOLLEN_SPLIT_HANELL_END_HOLD_SEC`). */
   const splitFrames = getHanellGoogleMinDurationFrames(fps, HANTVERKSKOLLEN_SPLIT_HANELL_END_HOLD_SEC);
-  const closingFrames = Math.round(fps * 5);
+  const closingFrames = getPremiumGreenClosingDurationInFrames(fps);
   const crossfade = getClosingCrossfadeFrames(fps);
   const splitRel = absFrame - introFrames;
   const splitEndFade = interpolate(
@@ -1323,15 +1374,6 @@ export const HantverkskollenSearchJourney: React.FC = () => {
     </AbsoluteFill>
   );
 };
-
-const BULLET_CLOSING_ITEMS = [
-  "Få fler kunder och bygg ett starkare företag online",
-  "Syns på Google när kunder söker hantverkare i ert område",
-  "Ta emot fler kundförfrågningar direkt via er profil",
-  "Bygg förtroende med en professionell företagssida",
-  "Stärk er närvaro online och nå fler lokala kunder",
-  "Visa upp ert företag på ett seriöst och modernt sätt",
-];
 
 /** Mjuk linje genom datapunkter (Catmull-Rom → kubiska Bézier, delare 6 = klassisk “mjuk graf”). */
 function smoothChartPath(pts: ReadonlyArray<{ x: number; y: number }>): string {
@@ -1367,7 +1409,7 @@ function smoothChartPath(pts: ReadonlyArray<{ x: number; y: number }>): string {
   return d;
 }
 
-/** Avslutande 5 s: grön bakgrund, fördelar + exponeringsdiagram (referensbilder). */
+/** Avslutande grön scen: fördelar (typewriter) + stilla efter sista raden + exponeringsdiagram. */
 const PremiumGreenClosingScene: React.FC<{
   /** När satt: mjukare in-toning (t.ex. kors toning från föregående scen) i stället för kort in-fade. */
   crossfadeInFrames?: number;
@@ -1942,7 +1984,7 @@ const HantverkskollenWithIntro: React.FC = () => {
   const { fps } = useVideoConfig();
   const introFrames = getFormSubmitClickFrame(fps);
   const mainSegmentFrames = Math.round(HANTVERKSKOLLEN_PREMIUM_MAIN_SEGMENT_FRAMES_AT_60_FPS * (fps / 60));
-  const closingFrames = Math.round(fps * 5);
+  const closingFrames = getPremiumGreenClosingDurationInFrames(fps);
   const transitionFrames = Math.round(fps * 0.35);
   const closingCrossfade = getClosingCrossfadeFrames(fps);
   const introOpacity = interpolate(frame, [introFrames - transitionFrames, introFrames], [1, 0], {
